@@ -65,8 +65,16 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             }
 
             if (tracks && tracks.length > 0) {
-                // Filter for tracks with previews
-                const playableTracks = tracks.filter(t => t.preview);
+                // Filter for tracks with previews AND strictly match the artist name
+                const playableTracks = tracks.filter(t => {
+                    if (!t.preview) return false;
+
+                    // If we are in random mode (no manual search query), strictly filter by artist
+                    if (!searchQuery) {
+                        return t.artist.name.toLowerCase().includes(randomArtist.toLowerCase());
+                    }
+                    return true;
+                });
 
                 if (playableTracks.length > 0) {
                     // Take the top 3 tracks
