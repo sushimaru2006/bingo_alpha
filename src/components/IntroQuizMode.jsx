@@ -148,14 +148,18 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                 </button>
                             </form>
 
-                            <button onClick={handleRandomPlay} className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg">
-                                <Music size={20} /> Random Play (from Search or 2000s)
+                            <button
+                                onClick={handleRandomPlay}
+                                disabled={!deviceId}
+                                className={`w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all ${!deviceId ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'}`}
+                            >
+                                <Music size={20} /> {deviceId ? "Random Play (from Search or 2000s)" : "Connecting Player..."}
                             </button>
 
                             {showResults && searchResults.length > 0 && (
                                 <div className="bg-white/10 rounded-xl p-2 max-h-60 overflow-y-auto">
                                     {searchResults.map(track => (
-                                        <div key={track.id} onClick={() => handlePlay(track)} className="flex items-center gap-3 p-2 hover:bg-white/20 rounded-lg cursor-pointer transition-colors">
+                                        <div key={track.id} onClick={() => deviceId && handlePlay(track)} className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${deviceId ? 'hover:bg-white/20 cursor-pointer' : 'opacity-50 cursor-not-allowed'}`}>
                                             <img src={track.album.images[2].url} alt="" className="w-10 h-10 rounded" />
                                             <div className="flex-1 min-w-0">
                                                 <p className="font-bold truncate">{track.name}</p>
@@ -187,7 +191,11 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                         </div>
 
                                         <div className="flex items-center gap-6">
-                                            <button onClick={togglePlay} className="p-4 bg-white text-black rounded-full hover:scale-110 transition-transform shadow-lg">
+                                            <button
+                                                onClick={togglePlay}
+                                                disabled={!deviceId}
+                                                className={`p-4 bg-white text-black rounded-full shadow-lg transition-all ${!deviceId ? 'opacity-50 cursor-not-allowed' : 'hover:scale-110'}`}
+                                            >
                                                 {isPaused ? <Play size={32} fill="black" /> : <Pause size={32} fill="black" />}
                                             </button>
 
@@ -195,6 +203,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                                 {isRevealed ? <EyeOff size={32} /> : <Eye size={32} />}
                                             </button>
                                         </div>
+                                        {!deviceId && <p className="text-xs text-white/50 mt-2 animate-pulse">Connecting to Player...</p>}
                                     </>
                                 ) : (
                                     <div className="h-64 flex items-center justify-center opacity-50">
