@@ -1,6 +1,7 @@
+
 import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { loginUrl, getTokenFromUrl, searchTracks, playTrack } from '../utils/spotify';
+import { loginUrl, getTokenFromCode, searchTracks, playTrack } from '../utils/spotify';
 import useSpotifyPlayer from '../hooks/useSpotifyPlayer';
 
 const IntroQuizMode = ({ onBack, onRegister }) => {
@@ -16,24 +17,42 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     const { player, deviceId, isPaused, isActive, currentTrack } = useSpotifyPlayer(token);
 
     useEffect(() => {
-        const hash = getTokenFromUrl();
-        const _token = hash.access_token;
-        if (_token) {
-            setToken(_token);
-            window.location.hash = "";
-            localStorage.setItem('spotify_token', _token);
-        } else {
-            const storedToken = localStorage.getItem('spotify_token');
-            if (storedToken) setToken(storedToken);
-        }
+        const checkAuth = async () => {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get("code");
+
+            if (code) {
+                // We need the client ID to exchange the token.
+                // Since we reload, we need to store it or ask for it again.
+                // For simplicity, let's try to get it from localStorage if we saved it.
+                const storedClientId = localStorage.getItem("spotify_client_id");
+                if (storedClientId) {
+                    const accessToken = await getTokenFromCode(code, storedClientId);
+                    if (accessToken) {
+                        setToken(accessToken);
+                        setClientId(storedClientId);
+                        window.history.replaceState({}, document.title, "/intro");
+                        localStorage.setItem('spotify_token', accessToken);
+                    }
+                }
+            } else {
+                const storedToken = localStorage.getItem('spotify_token');
+                if (storedToken) setToken(storedToken);
+                const storedClientId = localStorage.getItem("spotify_client_id");
+                if (storedClientId) setClientId(storedClientId);
+            }
+        };
+        checkAuth();
     }, []);
 
-    const handleLogin = () => {
+    const handleLogin = async () => {
         if (!clientId) {
             alert("Please enter a Spotify Client ID");
             return;
         }
-        window.location.href = loginUrl(clientId);
+        localStorage.setItem("spotify_client_id", clientId);
+        const url = await loginUrl(clientId);
+        window.location.href = url;
     };
 
     const handleSearch = async (e) => {
@@ -42,6 +61,16 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         const tracks = await searchTracks(searchQuery, token);
         setSearchResults(tracks);
         setShowResults(true);
+    };
+
+    const handleRandomPlay = async () => {
+        if (!token) return;
+        const query = searchQuery || "year:2000-2010"; // Default to 2000s if empty
+        const tracks = await searchTracks(query, token, 50);
+        if (tracks && tracks.length > 0) {
+            const randomTrack = tracks[Math.floor(Math.random() * tracks.length)];
+            handlePlay(randomTrack);
+        }
     };
 
     const handlePlay = async (track) => {
@@ -119,6 +148,10 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                 </button>
                             </form>
 
+                            <button onClick={handleRandomPlay} className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-bold flex items-center justify-center gap-2 hover:scale-105 transition-transform shadow-lg">
+                                <Music size={20} /> Random Play (from Search or 2000s)
+                            </button>
+
                             {showResults && searchResults.length > 0 && (
                                 <div className="bg-white/10 rounded-xl p-2 max-h-60 overflow-y-auto">
                                     {searchResults.map(track => (
@@ -142,11 +175,11 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                             <img src={selectedTrack.album.images[0].url} alt="Album Art" className="w-full h-full object-cover" />
                                         </div>
 
-                                        <div className="text-center h-16">
+                                        <div className="text-center h-16 flex flex-col justify-center w-full px-4">
                                             {isRevealed ? (
                                                 <>
-                                                    <p className="text-xl font-bold truncate max-w-xs">{selectedTrack.name}</p>
-                                                    <p className="opacity-80">{selectedTrack.artists[0].name}</p>
+                                                    <p className="text-xl font-bold truncate w-full">{selectedTrack.name}</p>
+                                                    <p className="opacity-80 truncate w-full">{selectedTrack.artists[0].name}</p>
                                                 </>
                                             ) : (
                                                 <p className="text-xl font-bold italic opacity-50">???</p>

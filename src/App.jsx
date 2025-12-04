@@ -29,16 +29,16 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-[#111] font-sans text-white overflow-hidden selection:bg-yellow-500 selection:text-black">
+    <div className="min-h-screen bg-[#111] font-sans text-white selection:bg-yellow-500 selection:text-black">
       <Routes>
         <Route path="/" element={
-          <div className="flex h-screen flex-col md:flex-row relative">
+          <div className="flex min-h-screen flex-col md:flex-row relative">
             {/* Background Texture */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-800/20 via-black to-black pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-800/20 via-black to-black pointer-events-none fixed"></div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-4 pb-32">
-              <header className="absolute top-8 w-full text-center animate-in fade-in slide-in-from-top-4 duration-1000">
+            <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-4 pb-40">
+              <header className="w-full text-center animate-in fade-in slide-in-from-top-4 duration-1000 mb-8 mt-8">
                 <h1 className="text-4xl md:text-6xl font-black text-white tracking-wider drop-shadow-2xl font-display">
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600">BINGO</span> REUNION
                 </h1>

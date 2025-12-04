@@ -26,9 +26,9 @@ const BingoSuccess = ({ onBack }) => {
     }, []);
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen w-full bg-gradient-to-br from-yellow-400 via-red-500 to-purple-600 text-white relative overflow-hidden">
+        <div className="flex flex-col items-center justify-center min-h-screen w-full bg-gradient-to-br from-yellow-400 via-red-500 to-purple-600 text-white relative overflow-y-auto py-12">
 
-            <div className="z-10 flex flex-col items-center gap-8 animate-in zoom-in duration-700">
+            <div className="z-10 flex flex-col items-center gap-8 animate-in zoom-in duration-700 m-auto">
                 <h1 className="text-9xl font-black font-display text-transparent bg-clip-text bg-gradient-to-b from-white to-yellow-200 drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] animate-pulse">
                     BINGO!!
                 </h1>
@@ -41,12 +41,12 @@ const BingoSuccess = ({ onBack }) => {
                     <Gift size={120} className="text-white drop-shadow-lg" />
                 </div>
 
-                <p className="text-2xl font-bold mt-8 animate-pulse">
+                <p className="text-2xl font-bold mt-8 animate-pulse text-center px-4">
                     Please come to the stage to claim your prize!
                 </p>
             </div>
 
-            <button onClick={onBack} className="absolute bottom-12 flex items-center gap-2 px-10 py-4 bg-black/30 hover:bg-black/50 rounded-full text-xl font-bold transition-all backdrop-blur-md z-50 border border-white/30">
+            <button onClick={onBack} className="flex items-center gap-2 px-10 py-4 bg-black/30 hover:bg-black/50 rounded-full text-xl font-bold transition-all backdrop-blur-md z-50 border border-white/30 mt-12 shrink-0">
                 <ArrowLeft size={24} /> Return to Game
             </button>
         </div>
