@@ -62,9 +62,9 @@ export const getTokenFromCode = async (code, clientId) => {
     return response.access_token;
 };
 
-export const searchTracks = async (query, token, limit = 10) => {
+export const searchTracks = async (query, token, limit = 10, offset = 0) => {
     const response = await fetch(
-        `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`,
+        `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}&offset=${offset}&market=from_token`,
         {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -76,7 +76,7 @@ export const searchTracks = async (query, token, limit = 10) => {
 };
 
 export const playTrack = async (token, deviceId, trackUri) => {
-    await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
+    const response = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`, {
         method: "PUT",
         body: JSON.stringify({ uris: [trackUri] }),
         headers: {
@@ -84,4 +84,9 @@ export const playTrack = async (token, deviceId, trackUri) => {
             Authorization: `Bearer ${token}`,
         },
     });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || "Failed to play track");
+    }
 };
