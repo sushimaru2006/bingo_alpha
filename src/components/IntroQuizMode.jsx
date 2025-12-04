@@ -1,4 +1,3 @@
-```
 import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { searchDeezer } from '../utils/deezer';
@@ -37,21 +36,65 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     };
 
     const handleRandomPlay = async () => {
-        const query = searchQuery || "pop"; 
+        // List of artists to rotate through
+        const artists = [
+            "Mrs. GREEN APPLE",
+            "RADWIMPS",
+            "ONE OK ROCK",
+            "Vaundy",
+            "YOASOBI",
+            "Aimyon",
+            "Chanmina",
+            "BTS",
+            "HANA",
+            "aespa"
+        ];
+
+        // Pick one random artist
+        const randomArtist = artists[Math.floor(Math.random() * artists.length)];
+        const query = searchQuery || `artist:"${randomArtist}"`;
+
         try {
-            const tracks = await searchDeezer(query, 50);
+            // Fetch top tracks (RANKING order) strictly from the top (offset 0)
+            let tracks = await searchDeezer(query, 100, 0, 'RANKING');
+
+            // Retry logic: If no tracks found, try offset 0 (redundant here but safe)
+            if (!tracks || tracks.length === 0) {
+                console.log("No tracks found, retrying...");
+                tracks = await searchDeezer(query, 100, 0);
+            }
+
             if (tracks && tracks.length > 0) {
-                // Filter for tracks with previews (Deezer almost always has them, but good to be safe)
+                // Filter for tracks with previews
                 const playableTracks = tracks.filter(t => t.preview);
-                
+
                 if (playableTracks.length > 0) {
-                    const randomTrack = playableTracks[Math.floor(Math.random() * playableTracks.length)];
+                    // Take the top 3 tracks
+                    const top3 = playableTracks.slice(0, 3);
+
+                    // Filter out currently playing track to ensure change
+                    // If selectedTrack exists, remove it from candidates
+                    const candidates = selectedTrack
+                        ? top3.filter(t => t.id !== selectedTrack.id)
+                        : top3;
+
+                    // Fallback to top3 if candidates is empty (e.g. only 1 track total)
+                    const pool = candidates.length > 0 ? candidates : top3;
+
+                    // Pick one randomly from the pool
+                    const randomTrack = pool[Math.floor(Math.random() * pool.length)];
+
+                    // Update the search results to show these top 3
+                    setSearchResults(top3);
+                    setShowResults(true);
+
+                    // Play the selected track
                     handlePlay(randomTrack);
                 } else {
-                    alert("No playable tracks found.");
+                    alert(`No playable tracks found for ${query}.`);
                 }
             } else {
-                alert("No tracks found.");
+                alert(`No tracks found for ${query}.`);
             }
         } catch (error) {
             console.error("Random play failed", error);
@@ -70,7 +113,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             newAudio.volume = 0.5;
             newAudio.onended = () => setIsPlaying(false);
             newAudio.play().catch(e => alert("Playback failed: " + e.message));
-            
+
             setAudio(newAudio);
             setIsPlaying(true);
             setSelectedTrack(track);
@@ -136,8 +179,8 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                             </button>
                         </form>
 
-                        <button 
-                            onClick={handleRandomPlay} 
+                        <button
+                            onClick={handleRandomPlay}
                             className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-105"
                         >
                             <Music size={20} /> Random Play (from Search or Pop)
@@ -162,7 +205,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                         <div className="flex flex-col items-center gap-4 mt-4 p-4 bg-black/40 rounded-2xl border border-white/10">
                             {selectedTrack ? (
                                 <>
-                                    <div className={`relative w - 48 h - 48 bg - gray - 800 rounded - xl overflow - hidden shadow - 2xl transition - all duration - 500 ${ isRevealed ? 'blur-0' : 'blur-xl grayscale' } `}>
+                                    <div className={`relative w-48 h-48 bg-gray-800 rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ${isRevealed ? 'blur-0' : 'blur-md'}`}>
                                         <img src={selectedTrack.album.cover_medium} alt="Album Art" className="w-full h-full object-cover" />
                                     </div>
 
@@ -178,13 +221,13 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                     </div>
 
                                     <div className="flex items-center gap-6">
-                                        <button 
-                                            onClick={togglePlay} 
+                                        <button
+                                            onClick={togglePlay}
                                             className="p-4 bg-white text-black rounded-full shadow-lg transition-all hover:scale-110"
                                         >
                                             {isPlaying ? <Pause size={32} fill="black" /> : <Play size={32} fill="black" />}
                                         </button>
-                                        
+
                                         <button onClick={() => setIsRevealed(!isRevealed)} className="p-4 bg-yellow-400 text-black rounded-full hover:scale-110 transition-transform shadow-lg">
                                             {isRevealed ? <EyeOff size={32} /> : <Eye size={32} />}
                                         </button>
