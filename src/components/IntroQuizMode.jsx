@@ -70,15 +70,19 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     // List of targets (artists or specific tracks)
     const targets = [
         // 合唱コン
-        { type: "track", title: "Let's search for Tomorrow", artist: "田中安茂", start_ms: 0 },
-        { type: "track", title: "夢を追いかけて", artist: "舘内聖美", start_ms: 0 },
-        { type: "track", title: "With You Smile", artist: "藤井宏樹", start_ms: 80500 },
-        { type: "track", title: "心の瞳", artist: "田中安茂", start_ms: 0 },
-        { type: "track", title: "時の旅人", artist: "神代混成合唱団", start_ms: 0 },
-        { type: "track", title: "瑠璃色の地球", artist: "小金井市立緑中学校", start_ms: 189000 },
-        { type: "track", title: "旅立ちの時", artist: "どさんこんさーと", start_ms: 23000 },
+        { type: "track", title: "Let's search for Tomorrow", artist: "田中安茂", start_ms: 72000 },
+        { type: "track", title: "夢を追いかけて", artist: "舘内聖美", start_ms: 50000 },
+        { type: "track", title: "With You Smile", artist: "藤井宏樹", start_ms: 72500 },
+        { type: "track", title: "心の瞳", artist: "田中安茂", start_ms: 57000 },
+        { type: "track", title: "時の旅人", artist: "神代混成合唱団", start_ms: 90000 },
+        { type: "track", title: "瑠璃色の地球", artist: "小金井市立緑中学校", start_ms: 61000 },
+        { type: "track", title: "旅立ちの時", artist: "どさんこんさーと", start_ms: 85000 },
         { type: "track", title: "ヒカリ", artist: "松下", start_ms: 0 },
-        { type: "track", title: "手紙", artist: "アンジェラ・アキ", start_ms: 0 },
+        { type: "track", title: "手紙", artist: "合唱団轟", start_ms: 48000 },
+        // 俺選びトラック
+        { type: "track", title: "Tokimeki", artist: "Vaundy", start_ms: 0 },
+        { type: "track", title: "IRIS OUT", artist: "米津", start_ms: 0 },
+        { type: "track", title: "Wasted Nights", artist: "One Ok Rock", start_ms: 42000 },
     ];
 
     const handleRandomPlay = async () => {
