@@ -1,12 +1,13 @@
 import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
-import { redirectToAuthCodeFlow, getAccessToken, searchSpotify, playSpotifyTrack } from '../utils/spotify';
+import { searchSpotify, playSpotifyTrack } from '../utils/spotify';
+import { useSpotify } from '../contexts/SpotifyContext';
 
 const IntroQuizMode = ({ onBack, onRegister }) => {
-    const [token, setToken] = useState(null);
-    const [deviceId, setDeviceId] = useState(null);
-    const [player, setPlayer] = useState(null);
+    // Consume Global Context
+    const { token, player, deviceId, isActive, login } = useSpotify();
 
+    // Local UI State
     const [number, setNumber] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
@@ -15,74 +16,26 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     const [selectedTrack, setSelectedTrack] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
 
-    // Initial Auth Check & SDK Load
-    const effectRan = useRef(false);
+    // Sync local playing state with global player state if needed, 
+    // but better to trust the player events. 
+    // Since player events are in Context (paused state), we could use that.
+    // But for now, we'll keep local toggle logic which updates the player.
 
-    // Initial Auth Check & SDK Load
+    // Effect: Handle Volume for Intro Quiz Mode
     useEffect(() => {
-        if (effectRan.current) return;
+        if (!player) return;
 
-        const checkAuth = async () => {
-            const params = new URLSearchParams(window.location.search);
-            const code = params.get("code");
+        console.log("IntroQuiz Mounted: Setting Volume 0.5");
+        player.setVolume(0.5).catch(e => console.error("Volume set failed", e));
 
-            // Mark effect as ran if we are processing auth
-            if (code) effectRan.current = true;
-
-            let _token = token;
-
-            if (code) {
-                // Convert code to token
-                try {
-                    _token = await getAccessToken(code);
-                    setToken(_token);
-                    // Clean URL
-                    window.history.replaceState({}, null, "/intro");
-                } catch (e) {
-                    console.error("Token exchange failed", e);
-                }
-            }
-
-            if (_token) {
-                // Load Spotify Web Playback SDK
-                const script = document.createElement("script");
-                script.src = "https://sdk.scdn.co/spotify-player.js";
-                script.async = true;
-                document.body.appendChild(script);
-
-                window.onSpotifyWebPlaybackSDKReady = () => {
-                    const newPlayer = new window.Spotify.Player({
-                        name: 'Bingo Quiz Player',
-                        getOAuthToken: cb => { cb(_token); },
-                        volume: 0.5
-                    });
-
-                    newPlayer.addListener('ready', ({ device_id }) => {
-                        console.log('Ready with Device ID', device_id);
-                        setDeviceId(device_id);
-                    });
-
-                    newPlayer.addListener('not_ready', ({ device_id }) => {
-                        console.log('Device ID has gone offline', device_id);
-                    });
-
-                    newPlayer.addListener('player_state_changed', (state) => {
-                        if (!state) return;
-                        setIsPlaying(!state.paused);
-                    });
-
-                    newPlayer.connect();
-                    setPlayer(newPlayer);
-                };
-            }
+        return () => {
+            console.log("IntroQuiz Unmounted: Reduce Volume to 0.1");
+            player.setVolume(0.1).catch(e => console.error("Volume reduce failed", e));
         };
+    }, [player]);
 
-        checkAuth();
-    }, []);
-
-    const handleLogin = () => {
-        redirectToAuthCodeFlow();
-    };
+    // Effect: Update local isPlaying when player state changes (optional/if needed)
+    // For now, togglePlay uses generic logic.
 
     const handleSearch = async (e) => {
         e.preventDefault();
@@ -94,7 +47,6 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         } catch (error) {
             console.error("Spotify search failed", error);
             alert("Search failed. Token may be expired. Please re-login.");
-            setToken(null);
         }
     };
 
@@ -112,16 +64,21 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             // { type: 'artist', name: "Chanmina" },
             // { type: 'artist', name: "HANA" },
             // { type: 'artist', name: "aespa" },
-
             // { type: 'artist', name: "米津　玄師" },
             // { type: "track", title: "手紙", artist: "アンジェラ・アキ" },
-            { type: "track", title: "革命道中-On The Way", artist: "アイナ・ジ・エンド", start_ms: 80000 },
+            // { type: "track", title: "革命道中-On The Way", artist: "アイナ・ジ・エンド", start_ms: 80000 },
             // { type: "artist", name: "ORANGE RANGE" },
-            // { type: "track", title: "Let's Search for Tomorrow", artist: "早稲田実業学校音楽部合唱班" },
-            // { type: "track", title: "時の旅人", artist: "早稲田実業学校音楽部合唱班" },
-            // { type: "track", title: "心の瞳", artist: "坂本九" }
 
             // 合唱コン
+            { type: "track", title: "Let's serach for Tomorrow", artist: "田中安茂", start_ms: 80000 },
+            { type: "track", title: "夢を追いかけて", artist: "舘内聖美", start_ms: 0 },
+            { type: "track", title: "With You Smile", artist: "藤井宏樹", start_ms: 80500 },
+            { type: "track", title: "心の瞳", artist: "田中安茂", start_ms: 0 },
+            { type: "track", title: "時の旅人", artist: "神代混成合唱団", start_ms: 97000 },
+            { type: "track", title: "瑠璃色の地球", artist: "小金井市立緑中学校", start_ms: 189000 },
+            { type: "track", title: "旅立ちの時", artist: "どさんこんさーと", start_ms: 23000 },
+            { type: "track", title: "ヒカリ", artist: "松下", start_ms: 0 },
+            { type: "track", title: "手紙", artist: "アンジェラ・アキ", start_ms: 0 },
         ];
 
         // Pick one random target
@@ -130,10 +87,8 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         let query = searchQuery;
         if (!query) {
             if (target.type === 'artist') {
-                // Use normal search query 
                 query = `"${target.name}"`;
             } else if (target.type === 'track') {
-                // Relaxed track search
                 query = `"${target.title}" "${target.artist}"`;
             }
         }
@@ -142,10 +97,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             let tracks = await searchSpotify(query, token);
 
             if (tracks && tracks.length > 0) {
-                // Spotify logic: trusting Spotify's ranking.
                 const topTrack = tracks[0];
-
-                // Check if the random target has a specific start time
                 const startMs = target.start_ms || 0;
                 handlePlay(topTrack, startMs);
 
@@ -169,6 +121,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             setSelectedTrack(track);
             setIsRevealed(false);
             setShowResults(false);
+            setIsPlaying(true);
         } catch (e) {
             alert("Playback failed: " + e.message);
         }
@@ -177,6 +130,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     const togglePlay = () => {
         if (player) {
             player.togglePlay();
+            setIsPlaying(!isPlaying); // Optimistic UI update
         }
     };
 
@@ -197,7 +151,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                     <h1 className="text-3xl font-bold">Spotify Login Required</h1>
                     <p className="text-gray-400">Please login with a Premium account to use this feature.</p>
                     <button
-                        onClick={handleLogin}
+                        onClick={login}
                         className="flex items-center gap-3 px-8 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-xl transition-all hover:scale-105"
                     >
                         <LogIn size={24} />
@@ -251,7 +205,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                             onClick={handleRandomPlay}
                             className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-105"
                         >
-                            <Music size={20} /> Random Play (Top 1)
+                            <Music size={20} /> Random Play
                         </button>
 
                         {showResults && searchResults.length > 0 && (
