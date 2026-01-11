@@ -1,9 +1,10 @@
-import { ArrowLeft, Check, User, GraduationCap, Play, Square } from 'lucide-react';
+import { ArrowLeft, Check, User, GraduationCap, Play, Square, Settings, Trash2, Plus, RotateCcw, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 
 // Configuration: Add detailed teacher data here
 // You can add images by adding an 'image' property with a URL
-const TEACHERS = [
+// Default data for reset
+const DEFAULT_TEACHERS = [
     { id: 1, name: "Principal", color: "bg-red-500", title: "校長先生" },
     { id: 2, name: "Vice Principal", color: "bg-blue-500", title: "副校長先生" },
     { id: 3, name: "Grade Chief", color: "bg-green-500", title: "学年主任" },
@@ -16,8 +17,70 @@ const TEACHERS = [
 const TeacherQuizMode = ({ onBack, onRegister }) => {
     const [number, setNumber] = useState('');
     const [gameState, setGameState] = useState('IDLE'); // IDLE, SPINNING, SELECTED
-    const [currentTeacher, setCurrentTeacher] = useState(TEACHERS[0]);
+
+    // Teacher List State with Persistence
+    const [teachers, setTeachers] = useState(() => {
+        try {
+            const saved = localStorage.getItem('bingo_teachers');
+            return saved ? JSON.parse(saved) : DEFAULT_TEACHERS;
+        } catch (e) {
+            return DEFAULT_TEACHERS;
+        }
+    });
+
+    const [selectedTeacherIds, setSelectedTeacherIds] = useState(() => {
+        try {
+            const saved = localStorage.getItem('bingo_selected_teachers');
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
+    });
+
+    const [currentTeacher, setCurrentTeacher] = useState(teachers[0] || DEFAULT_TEACHERS[0]);
     const spinIntervalRef = useRef(null);
+
+    // Settings Modal State
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [newTeacherName, setNewTeacherName] = useState('');
+    const [newTeacherTitle, setNewTeacherTitle] = useState('');
+
+    // Sync to localStorage
+    useEffect(() => {
+        localStorage.setItem('bingo_teachers', JSON.stringify(teachers));
+    }, [teachers]);
+
+    useEffect(() => {
+        localStorage.setItem('bingo_selected_teachers', JSON.stringify(selectedTeacherIds));
+    }, [selectedTeacherIds]);
+
+    const addTeacher = () => {
+        if (!newTeacherName || !newTeacherTitle) return;
+        const newTeacher = {
+            id: Date.now(),
+            name: newTeacherName,
+            title: newTeacherTitle,
+            color: ["bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-orange-500", "bg-cyan-500"][Math.floor(Math.random() * 7)]
+        };
+        setTeachers([...teachers, newTeacher]);
+        setNewTeacherName('');
+        setNewTeacherTitle('');
+    };
+
+    const removeTeacher = (id) => {
+        if (teachers.length <= 1) {
+            alert("At least one teacher is required!");
+            return;
+        }
+        setTeachers(teachers.filter(t => t.id !== id));
+    };
+
+    const resetTeachers = () => {
+        if (confirm("Reset teacher list and history?")) {
+            setTeachers(DEFAULT_TEACHERS);
+            setSelectedTeacherIds([]);
+        }
+    };
 
     // Cleanup on unmount
     useEffect(() => {
@@ -27,14 +90,21 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
     const startSpin = () => {
         if (gameState === 'SPINNING') return;
 
+        // Filter available teachers
+        const available = teachers.filter(t => !selectedTeacherIds.includes(t.id));
+        if (available.length === 0) {
+            alert("All teachers have been selected! Please reset history in settings.");
+            return;
+        }
+
         setGameState('SPINNING');
         let index = 0;
 
-        // Fast cycling
+        // Fast cycling with ALL teachers for visual effect
         spinIntervalRef.current = setInterval(() => {
-            index = (index + 1) % TEACHERS.length;
-            setCurrentTeacher(TEACHERS[index]);
-        }, 50); // Speed of shuffle
+            index = (index + 1) % teachers.length;
+            setCurrentTeacher(teachers[index]);
+        }, 50);
     };
 
     const stopSpin = () => {
@@ -42,11 +112,20 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
 
         clearInterval(spinIntervalRef.current);
 
-        // Pick a random winner securely
-        const winnerIndex = Math.floor(Math.random() * TEACHERS.length);
-        const winner = TEACHERS[winnerIndex];
+        // Pick a random winner from AVAILABLE teachers
+        const available = teachers.filter(t => !selectedTeacherIds.includes(t.id));
+
+        if (available.length === 0) {
+            // Should verify startSpin prevented this, but just in case
+            setGameState('IDLE');
+            return;
+        }
+
+        const winnerIndex = Math.floor(Math.random() * available.length);
+        const winner = available[winnerIndex];
 
         setCurrentTeacher(winner);
+        setSelectedTeacherIds(prev => [...prev, winner.id]);
         setGameState('SELECTED');
     };
 
@@ -70,8 +149,14 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
             <div className="z-10 flex flex-col items-center gap-8 w-full max-w-4xl">
 
                 {/* Header */}
-                <h1 className="text-4xl md:text-6xl font-display drop-shadow-lg text-center tracking-wider mb-4" style={{ textShadow: '4px 4px 0px rgba(0,0,0,0.2)' }}>
+                <h1 className="text-4xl md:text-6xl font-display drop-shadow-lg text-center tracking-wider mb-4 relative z-20" style={{ textShadow: '4px 4px 0px rgba(0,0,0,0.2)' }}>
                     TEACHER ROULETTE
+                    <button
+                        onClick={() => setIsSettingsOpen(true)}
+                        className="absolute -right-16 top-1/2 -translate-y-1/2 p-2 text-white/30 hover:text-white transition-colors"
+                    >
+                        <Settings size={28} />
+                    </button>
                 </h1>
 
                 {/* Main Content Area */}
@@ -148,6 +233,91 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
                         </div>
                     )}
                 </div>
+
+                {/* Settings Modal */}
+                {isSettingsOpen && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <div className="bg-gray-900 w-full max-w-2xl rounded-3xl border border-white/10 shadow-2xl flex flex-col max-h-[80vh]">
+                            <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                                <h2 className="text-2xl font-bold flex items-center gap-2">
+                                    <Settings className="text-yellow-400" /> Manage Teachers
+                                </h2>
+                                <button onClick={() => setIsSettingsOpen(false)} className="p-2 hover:bg-white/10 rounded-full">
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+                                {/* Add New */}
+                                <div className="flex gap-4 items-end bg-white/5 p-4 rounded-xl">
+                                    <div className="flex-1 space-y-2">
+                                        <label className="text-xs text-gray-400 font-bold uppercase">Name</label>
+                                        <input
+                                            value={newTeacherName}
+                                            onChange={(e) => setNewTeacherName(e.target.value)}
+                                            placeholder="Teacher Name"
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:border-yellow-400"
+                                        />
+                                    </div>
+                                    <div className="flex-1 space-y-2">
+                                        <label className="text-xs text-gray-400 font-bold uppercase">Title / Subject</label>
+                                        <input
+                                            value={newTeacherTitle}
+                                            onChange={(e) => setNewTeacherTitle(e.target.value)}
+                                            placeholder="Subject"
+                                            className="w-full bg-black/50 border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:border-yellow-400"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={addTeacher}
+                                        disabled={!newTeacherName || !newTeacherTitle}
+                                        className="bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed p-3 rounded-xl font-bold transition-colors"
+                                    >
+                                        <Plus size={20} />
+                                    </button>
+                                </div>
+
+                                {/* List */}
+                                <div className="space-y-2">
+                                    {teachers.map(teacher => {
+                                        const isSelected = selectedTeacherIds.includes(teacher.id);
+                                        return (
+                                            <div key={teacher.id} className={`flex items-center justify-between bg-white/5 p-4 rounded-xl transition-colors group ${isSelected ? 'opacity-50' : 'hover:bg-white/10'}`}>
+                                                <div className="flex items-center gap-4">
+                                                    <div className={`w-3 h-12 rounded-full ${teacher.color}`}></div>
+                                                    <div>
+                                                        <h4 className="font-bold text-lg flex items-center gap-2">
+                                                            {teacher.name}
+                                                            {isSelected && <span className="text-xs bg-yellow-500 text-black px-2 py-0.5 rounded-full">DONE</span>}
+                                                        </h4>
+                                                        <p className="text-sm text-gray-400">{teacher.title}</p>
+                                                    </div>
+                                                </div>
+                                                {!isSelected && (
+                                                    <button
+                                                        onClick={() => removeTeacher(teacher.id)}
+                                                        className="p-2 text-red-500 hover:bg-red-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                                    >
+                                                        <Trash2 size={20} />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div className="p-6 border-t border-white/10 flex justify-between bg-black/20 rounded-b-3xl">
+                                <button onClick={resetTeachers} className="text-sm text-red-400 hover:text-red-300 flex items-center gap-2">
+                                    <RotateCcw size={16} /> Reset List & History
+                                </button>
+                                <div className="text-sm text-gray-500">
+                                    {selectedTeacherIds.length} / {teachers.length} Selected
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
             </div>
 
