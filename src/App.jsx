@@ -16,6 +16,7 @@ function App() {
   const [isFullScreen, setIsFullScreen] = useState(false);
   const appRef = useRef(null);
   const [showReachModal, setShowReachModal] = useState(false);
+  const [showMobileHistory, setShowMobileHistory] = useState(false);
   const [reachInput, setReachInput] = useState('');
 
   // Sync route with mode (URL is source of truth)
@@ -134,9 +135,34 @@ function App() {
               </div>
             </div>
 
-            {/* Sidebar (History) */}
+            {/* Sidebar (History) - Desktop */}
             <div className="hidden md:block w-80 lg:w-96 h-full p-6 z-20 animate-in fade-in slide-in-from-right-10 duration-1000">
               <HistoryPanel history={game.history} reachNumbers={game.reachNumbers} />
+            </div>
+
+            {/* Mobile History Toggle & Drawer */}
+            <div className="md:hidden">
+              <button
+                onClick={() => setShowMobileHistory(true)}
+                className="fixed top-20 right-4 z-40 p-3 bg-blue-600/80 backdrop-blur-md rounded-full text-white shadow-lg border border-white/20"
+              >
+                <span className="font-bold text-xs">HISTORY</span>
+              </button>
+
+              {showMobileHistory && (
+                <div className="fixed inset-0 z-50 flex justify-end">
+                  <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowMobileHistory(false)} />
+                  <div className="relative w-80 h-full bg-gray-900 border-l border-white/10 p-6 shadow-2xl animate-in slide-in-from-right duration-300">
+                    <button
+                      onClick={() => setShowMobileHistory(false)}
+                      className="absolute top-4 right-4 p-2 text-white/50 hover:text-white"
+                    >
+                      X
+                    </button>
+                    <HistoryPanel history={game.history} reachNumbers={game.reachNumbers} />
+                  </div>
+                </div>
+              )}
             </div>
 
             <ControlPanel

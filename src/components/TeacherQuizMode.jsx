@@ -160,14 +160,14 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
                 </h1>
 
                 {/* Main Content Area */}
-                <div className="flex flex-col md:flex-row gap-8 items-center justify-center w-full">
+                <div className="flex flex-col md:flex-row gap-8 items-center justify-center w-full px-4">
 
                     {/* Left: Teacher Roulette */}
-                    <div className={`relative transition-all duration-500 ${gameState === 'SELECTED' ? 'scale-100' : 'scale-90 opacity-90'}`}>
+                    <div className={`relative transition-all duration-500 w-full md:w-auto flex flex-col items-center ${gameState === 'SELECTED' ? 'scale-100' : 'scale-90 opacity-90'}`}>
 
                         {/* Teacher Card */}
                         <div className={`
-                            w-80 h-96 bg-black/30 backdrop-blur-md border-8 
+                            w-full max-w-xs md:w-80 h-96 bg-black/30 backdrop-blur-md border-8 
                             ${gameState === 'SELECTED' ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)]' : 'border-white/20'} 
                             rounded-3xl flex flex-col items-center justify-center gap-6 p-6 transition-all duration-300
                         `}>
@@ -188,7 +188,7 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
                         </div>
 
                         {/* Controls */}
-                        <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 flex gap-4 w-full justify-center">
+                        <div className="md:absolute md:-bottom-24 md:left-1/2 md:-translate-x-1/2 mt-8 flex gap-4 w-full justify-center">
                             {gameState === 'IDLE' && (
                                 <button
                                     onClick={startSpin}

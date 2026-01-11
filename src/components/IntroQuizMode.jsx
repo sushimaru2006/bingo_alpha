@@ -276,7 +276,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             <div className={`z-10 w-full max-w-6xl flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500 h-full overflow-y-auto custom-scrollbar ${isFullScreen ? 'opacity-0 pointer-events-none' : ''}`}>
 
                 {/* Header */}
-                <div className="flex items-center gap-4 mt-8">
+                <div className="flex items-center gap-4 mt-8 flex-col md:flex-row text-center md:text-left">
                     <div className="p-4 bg-black/20 rounded-full backdrop-blur-lg">
                         <Music size={40} className="text-white" />
                     </div>
