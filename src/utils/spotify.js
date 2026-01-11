@@ -83,7 +83,10 @@ export const searchSpotify = async (query, token) => {
     });
 
     if (!response.ok) {
-        throw new Error("Spotify search failed");
+        if (response.status === 401) {
+            throw new Error("Token Expired");
+        }
+        throw new Error(`Spotify search failed: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();

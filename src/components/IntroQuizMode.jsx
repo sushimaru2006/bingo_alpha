@@ -68,7 +68,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     // List of targets (artists or specific tracks)
     const targets = [
         // 合唱コン
-        { type: "track", title: "Let's serach for Tomorrow", artist: "田中安茂", start_ms: 80000 },
+        { type: "track", title: "Let's search for Tomorrow", artist: "田中安茂", start_ms: 80000 },
         { type: "track", title: "夢を追いかけて", artist: "舘内聖美", start_ms: 0 },
         { type: "track", title: "With You Smile", artist: "藤井宏樹", start_ms: 80500 },
         { type: "track", title: "心の瞳", artist: "田中安茂", start_ms: 0 },
@@ -126,7 +126,13 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             }
         } catch (error) {
             console.error("Random play failed", error);
-            alert("Random play failed.");
+            if (error.message === "Token Expired") {
+                alert("Spotify token has expired. Please log in again.");
+                localStorage.removeItem("spotify_access_token");
+                window.location.reload();
+            } else {
+                alert(error.message);
+            }
         }
     };
 
