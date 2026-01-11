@@ -15,6 +15,8 @@ function App() {
   const location = useLocation();
   const [isFullScreen, setIsFullScreen] = useState(false);
   const appRef = useRef(null);
+  const [showReachModal, setShowReachModal] = useState(false);
+  const [reachInput, setReachInput] = useState('');
 
   // Sync route with mode (URL is source of truth)
   useEffect(() => {
@@ -51,6 +53,14 @@ function App() {
     return () => document.removeEventListener('fullscreenchange', handleChange);
   }, []);
 
+  const handleAddReach = () => {
+    if (reachInput) {
+      game.addReachNumber(reachInput);
+      setReachInput('');
+      setShowReachModal(false);
+    }
+  };
+
   return (
     <div ref={appRef} className="min-h-screen bg-[#111] font-sans text-white selection:bg-yellow-500 selection:text-black relative">
       {/* Global Full Screen Toggle */}
@@ -61,6 +71,43 @@ function App() {
       >
         {isFullScreen ? <Minimize size={24} /> : <Maximize size={24} />}
       </button>
+
+      {/* Custom Reach Modal */}
+      {showReachModal && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="bg-gray-900 p-8 rounded-2xl border border-white/20 shadow-2xl w-96">
+            <h3 className="text-2xl font-bold text-white mb-4">Add Reach Number</h3>
+            <input
+              type="number"
+              min="1"
+              max="75"
+              value={reachInput}
+              onChange={(e) => setReachInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleAddReach()}
+              placeholder="Enter number (1-75)"
+              className="w-full px-4 py-3 rounded-xl bg-gray-800 text-white font-bold text-xl focus:outline-none focus:ring-4 focus:ring-yellow-500 mb-4"
+              autoFocus
+            />
+            <div className="flex gap-3">
+              <button
+                onClick={handleAddReach}
+                className="flex-1 py-3 bg-yellow-500 hover:bg-yellow-400 text-black font-bold rounded-xl transition-all"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => {
+                  setShowReachModal(false);
+                  setReachInput('');
+                }}
+                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-white font-bold rounded-xl transition-all"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <Routes>
         <Route path="/" element={
           <div className="flex min-h-screen flex-col md:flex-row relative">
@@ -95,10 +142,7 @@ function App() {
             <ControlPanel
               onSpin={game.spin}
               onModeChange={handleModeChange}
-              onAddReach={() => {
-                const num = prompt("Enter reach number:");
-                if (num) game.addReachNumber(num);
-              }}
+              onAddReach={() => setShowReachModal(true)}
               isSpinning={game.isSpinning}
             />
           </div>
