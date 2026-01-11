@@ -276,14 +276,14 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             <div className={`z-10 w-full max-w-6xl flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500 h-full overflow-y-auto custom-scrollbar ${isFullScreen ? 'opacity-0 pointer-events-none' : ''}`}>
 
                 {/* Header */}
-                <div className="flex items-center gap-4 mt-8 flex-col md:flex-row text-center md:text-left">
+                <div className="flex items-center gap-4 mt-8 flex-col md:flex-row landscape:flex-row text-center md:text-left landscape:text-left">
                     <div className="p-4 bg-black/20 rounded-full backdrop-blur-lg">
                         <Music size={40} className="text-white" />
                     </div>
                     <h1 className="text-4xl md:text-6xl font-black font-display drop-shadow-lg">INTRO QUIZ</h1>
                 </div>
 
-                <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 landscape:grid-cols-2 gap-8">
 
                     {/* Left: Search & Player */}
                     <div className="flex flex-col gap-6 bg-black/20 p-6 rounded-3xl backdrop-blur-md">

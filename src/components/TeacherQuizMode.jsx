@@ -160,10 +160,10 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
                 </h1>
 
                 {/* Main Content Area */}
-                <div className="flex flex-col md:flex-row gap-8 items-center justify-center w-full px-4">
+                <div className="flex flex-col md:flex-row landscape:flex-row gap-8 items-center justify-center w-full px-4">
 
                     {/* Left: Teacher Roulette */}
-                    <div className={`relative transition-all duration-500 w-full md:w-auto flex flex-col items-center ${gameState === 'SELECTED' ? 'scale-100' : 'scale-90 opacity-90'}`}>
+                    <div className={`relative transition-all duration-500 w-full md:w-auto landscape:w-auto flex flex-col items-center ${gameState === 'SELECTED' ? 'scale-100' : 'scale-90 opacity-90'}`}>
 
                         {/* Teacher Card */}
                         <div className={`
