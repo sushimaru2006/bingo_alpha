@@ -365,7 +365,9 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                         <h3 className="text-2xl font-bold mb-6 text-center">Winner's Choice</h3>
                         <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4 w-full">
                             <input
-                                type="number"
+                                type="tel"
+                                inputMode="numeric"
+                                pattern="[0-9]*"
                                 min="1"
                                 max="75"
                                 value={number}

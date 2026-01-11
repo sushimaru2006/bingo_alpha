@@ -217,7 +217,9 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
 
                             <form onSubmit={handleSubmit} className="flex flex-col items-center gap-4">
                                 <input
-                                    type="number"
+                                    type="tel"
+                                    inputMode="numeric"
+                                    pattern="[0-9]*"
                                     min="1"
                                     max="75"
                                     value={number}
