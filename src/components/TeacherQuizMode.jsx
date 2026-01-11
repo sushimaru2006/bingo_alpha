@@ -76,8 +76,7 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
     };
 
     const resetTeachers = () => {
-        if (confirm("Reset teacher list and history?")) {
-            setTeachers(DEFAULT_TEACHERS);
+        if (confirm("Reset selection history only? (List will remain)")) {
             setSelectedTeacherIds([]);
         }
     };
@@ -297,7 +296,7 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
 
                             <div className="p-6 border-t border-white/10 flex justify-between bg-black/20 rounded-b-3xl">
                                 <button onClick={resetTeachers} className="text-sm text-red-400 hover:text-red-300 flex items-center gap-2">
-                                    <RotateCcw size={16} /> Reset List & History
+                                    <RotateCcw size={16} /> Reset History Only
                                 </button>
                                 <div className="text-sm text-gray-500">
                                     {selectedTeacherIds.length} / {teachers.length} Selected
