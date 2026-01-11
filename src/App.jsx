@@ -73,7 +73,7 @@ function App() {
           <div className="bg-gray-900 p-8 rounded-2xl border border-white/20 shadow-2xl w-96">
             <h3 className="text-2xl font-bold text-white mb-4">Add Reach Number</h3>
             <input
-              type="number"
+              type="tel"
               min="1"
               max="75"
               value={reachInput}
