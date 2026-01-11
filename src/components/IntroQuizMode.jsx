@@ -21,7 +21,6 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     const [isRevealed, setIsRevealed] = useState(false);
     const [selectedTrack, setSelectedTrack] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
-    const [hasStarted, setHasStarted] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
     const containerRef = useRef(null);
 
@@ -117,12 +116,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                 const topTrack = tracks[0];
                 const startMs = target.start_ms || 0;
 
-                // Set track but DO NOT play yet (Mobile Fix)
-                setSelectedTrack({ ...topTrack, startMs });
-                setIsPlaying(false);
-                setHasStarted(false);
-                setIsRevealed(false);
-                setShowResults(false);
+                await handlePlay(topTrack, startMs);
 
                 // Add to history
                 const newHistory = [...playedHistory, targetKey];
@@ -152,12 +146,12 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
 
         try {
             await playSpotifyTrack(token, deviceId, track.uri, position_ms);
-            // setSelectedTrack is already set in RandomPlay
+            setSelectedTrack(track);
+            setIsRevealed(false);
+            setShowResults(false);
             setIsPlaying(true);
-            setHasStarted(true);
         } catch (e) {
             alert("Playback failed: " + e.message);
-            // throw e;
         }
     };
 
@@ -323,17 +317,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
 
 
                         {/* Player Controls */}
-                        <div className="flex flex-col items-center gap-4 mt-4 p-4 bg-black/40 rounded-2xl border border-white/10 relative group">
-                            {/* Projector Trigger */}
-                            {selectedTrack && (
-                                <button
-                                    onClick={toggleFullScreen}
-                                    className="absolute top-2 right-2 p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-all"
-                                    title="Projector Mode"
-                                >
-                                    <Maximize size={20} />
-                                </button>
-                            )}
+                        <div className="flex flex-col items-center gap-4 mt-4 p-4 bg-black/40 rounded-2xl border border-white/10">
 
                             {selectedTrack ? (
                                 <>
@@ -355,27 +339,16 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                     </div>
 
                                     <div className="flex items-center gap-6">
-                                        {!hasStarted ? (
-                                            <button
-                                                onClick={() => handlePlay(selectedTrack, selectedTrack.startMs)}
-                                                className="px-8 py-4 bg-red-600 text-white font-black text-2xl rounded-full shadow-xl animate-pulse hover:scale-105 transition-transform"
-                                            >
-                                                TAP TO START
-                                            </button>
-                                        ) : (
-                                            <>
-                                                <button
-                                                    onClick={togglePlay}
-                                                    className="p-4 bg-[#1DB954] text-black rounded-full shadow-lg transition-all hover:scale-110"
-                                                >
-                                                    {isPlaying ? <Pause size={32} fill="black" /> : <Play size={32} fill="black" />}
-                                                </button>
+                                        <button
+                                            onClick={togglePlay}
+                                            className="p-4 bg-[#1DB954] text-black rounded-full shadow-lg transition-all hover:scale-110"
+                                        >
+                                            {isPlaying ? <Pause size={32} fill="black" /> : <Play size={32} fill="black" />}
+                                        </button>
 
-                                                <button onClick={() => setIsRevealed(!isRevealed)} className="p-4 bg-yellow-400 text-black rounded-full hover:scale-110 transition-transform shadow-lg">
-                                                    {isRevealed ? <EyeOff size={32} /> : <Eye size={32} />}
-                                                </button>
-                                            </>
-                                        )}
+                                        <button onClick={() => setIsRevealed(!isRevealed)} className="p-4 bg-yellow-400 text-black rounded-full hover:scale-110 transition-transform shadow-lg">
+                                            {isRevealed ? <EyeOff size={32} /> : <Eye size={32} />}
+                                        </button>
                                     </div>
                                     <p className="text-xs text-white/50 mt-2">Powered by Spotify Premium</p>
                                 </>
