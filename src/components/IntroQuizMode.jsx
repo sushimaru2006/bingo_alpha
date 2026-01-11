@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn, RefreshCw } from 'lucide-react';
+import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn, RefreshCw, Maximize, Minimize } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { searchSpotify, playSpotifyTrack } from '../utils/spotify';
 import { useSpotify } from '../contexts/SpotifyContext';
@@ -22,6 +22,8 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     const [selectedTrack, setSelectedTrack] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [hasStarted, setHasStarted] = useState(false);
+    const [isFullScreen, setIsFullScreen] = useState(false);
+    const containerRef = useRef(null);
 
     // Play History
     const [playedHistory, setPlayedHistory] = useState(() => {
@@ -173,6 +175,27 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         }
     };
 
+    const toggleFullScreen = () => {
+        if (!document.fullscreenElement) {
+            containerRef.current.requestFullscreen().catch(err => {
+                console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+            });
+            setIsFullScreen(true);
+        } else {
+            document.exitFullscreen();
+            setIsFullScreen(false);
+        }
+    };
+
+    // Listen for Escape key or browser exit
+    useEffect(() => {
+        const handleChange = () => {
+            setIsFullScreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleChange);
+        return () => document.removeEventListener('fullscreenchange', handleChange);
+    }, []);
+
     const handleSubmit = (e) => {
         e.preventDefault();
         if (number) {
@@ -205,7 +228,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     }
 
     return (
-        <div className="flex flex-col items-center h-screen w-full bg-[#1DB954] text-white relative overflow-hidden p-4">
+        <div ref={containerRef} className="flex flex-col items-center h-screen w-full bg-[#1DB954] text-white relative overflow-hidden p-4 font-sans">
             {/* Background Animation */}
             <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border-[12px] border-white rounded-full animate-ping [animation-duration:3s]"></div>
@@ -213,7 +236,50 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border-[12px] border-white rounded-full animate-ping [animation-duration:3s] [animation-delay:2s]"></div>
             </div>
 
-            <div className="z-10 w-full max-w-6xl flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500 h-full overflow-y-auto custom-scrollbar">
+            {/* FULL SCREEN PROJECTOR MODE OVERLAY */}
+            {isFullScreen && selectedTrack && (
+                <div className="absolute inset-0 z-50 bg-black flex flex-col items-center justify-center">
+                    <div className="absolute top-4 right-4 z-50">
+                        <button onClick={toggleFullScreen} className="p-4 bg-white/10 hover:bg-white/20 rounded-full text-white transition-all">
+                            <Minimize size={40} />
+                        </button>
+                    </div>
+
+                    {/* Big Album Art */}
+                    <div className={`relative w-[60vh] h-[60vh] mb-8 shadow-2xl transition-all duration-1000 ${isRevealed ? 'blur-0' : 'blur-3xl grayscale'}`}>
+                        {selectedTrack.album.images[0] && (
+                            <img src={selectedTrack.album.images[0].url} alt="Album Art" className="w-full h-full object-cover rounded-xl" />
+                        )}
+                    </div>
+
+                    {/* Big Text Info */}
+                    <div className="text-center w-full px-8 space-y-4">
+                        {isRevealed ? (
+                            <div className="animate-in slide-in-from-bottom-10 fade-in duration-700">
+                                <h2 className="text-5xl md:text-7xl font-black text-white drop-shadow-2xl mb-4">{selectedTrack.name}</h2>
+                                <p className="text-3xl md:text-5xl text-gray-300 font-bold">{selectedTrack.artists.map(a => a.name).join(", ")}</p>
+                            </div>
+                        ) : (
+                            <div className="text-white/20 text-6xl font-black tracking-widest animate-pulse">
+                                ???
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Minimal Controls */}
+                    <div className="absolute bottom-10 flex gap-8">
+                        <button onClick={() => setIsRevealed(!isRevealed)} className="p-6 bg-yellow-400 text-black rounded-full hover:scale-110 transition-transform shadow-2xl">
+                            {isRevealed ? <EyeOff size={48} /> : <Eye size={48} />}
+                        </button>
+                        <button onClick={togglePlay} className="p-6 bg-[#1DB954] text-black rounded-full hover:scale-110 transition-transform shadow-2xl">
+                            {isPlaying ? <Pause size={48} fill="black" /> : <Play size={48} fill="black" />}
+                        </button>
+                    </div>
+                </div>
+            )}
+
+
+            <div className={`z-10 w-full max-w-6xl flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500 h-full overflow-y-auto custom-scrollbar ${isFullScreen ? 'opacity-0 pointer-events-none' : ''}`}>
 
                 {/* Header */}
                 <div className="flex items-center gap-4 mt-8">
@@ -257,7 +323,18 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
 
 
                         {/* Player Controls */}
-                        <div className="flex flex-col items-center gap-4 mt-4 p-4 bg-black/40 rounded-2xl border border-white/10">
+                        <div className="flex flex-col items-center gap-4 mt-4 p-4 bg-black/40 rounded-2xl border border-white/10 relative group">
+                            {/* Projector Trigger */}
+                            {selectedTrack && (
+                                <button
+                                    onClick={toggleFullScreen}
+                                    className="absolute top-2 right-2 p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-all"
+                                    title="Projector Mode"
+                                >
+                                    <Maximize size={20} />
+                                </button>
+                            )}
+
                             {selectedTrack ? (
                                 <>
                                     <div className={`relative w-48 h-48 bg-gray-800 rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ${isRevealed ? 'blur-0' : 'blur-md'}`}>
@@ -333,7 +410,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
 
             </div>
 
-            <button onClick={onBack} className="absolute top-8 left-8 flex items-center gap-2 px-6 py-3 bg-black/20 hover:bg-black/40 rounded-full text-lg font-bold transition-all backdrop-blur-md z-50">
+            <button onClick={onBack} className={`absolute top-8 left-8 flex items-center gap-2 px-6 py-3 bg-black/20 hover:bg-black/40 rounded-full text-lg font-bold transition-all backdrop-blur-md z-50 ${isFullScreen ? 'hidden' : ''}`}>
                 <ArrowLeft size={24} /> Back
             </button>
         </div>

@@ -1,5 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Maximize, Minimize } from 'lucide-react';
 import { useBingoGame } from './hooks/useBingoGame';
 import Roulette from './components/Roulette';
 import HistoryPanel from './components/HistoryPanel';
@@ -12,6 +13,8 @@ function App() {
   const game = useBingoGame();
   const navigate = useNavigate();
   const location = useLocation();
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const appRef = useRef(null);
 
   // Sync route with mode (URL is source of truth)
   useEffect(() => {
@@ -28,8 +31,36 @@ function App() {
     else navigate('/');
   };
 
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      appRef.current.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      });
+      setIsFullScreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullScreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleChange);
+    return () => document.removeEventListener('fullscreenchange', handleChange);
+  }, []);
+
   return (
-    <div className="min-h-screen bg-[#111] font-sans text-white selection:bg-yellow-500 selection:text-black">
+    <div ref={appRef} className="min-h-screen bg-[#111] font-sans text-white selection:bg-yellow-500 selection:text-black relative">
+      {/* Global Full Screen Toggle */}
+      <button
+        onClick={toggleFullScreen}
+        className="fixed top-4 right-4 z-[100] p-3 bg-white/10 hover:bg-white/20 rounded-full text-white/50 hover:text-white transition-all backdrop-blur-md"
+        title={isFullScreen ? "Exit Full Screen" : "Enter Full Screen"}
+      >
+        {isFullScreen ? <Minimize size={24} /> : <Maximize size={24} />}
+      </button>
       <Routes>
         <Route path="/" element={
           <div className="flex min-h-screen flex-col md:flex-row relative">
