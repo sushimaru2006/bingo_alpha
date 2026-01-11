@@ -140,7 +140,7 @@ function App() {
             <div className="md:hidden">
               <button
                 onClick={() => setShowMobileHistory(true)}
-                className="fixed top-20 right-4 z-40 p-3 bg-blue-600/80 backdrop-blur-md rounded-full text-white shadow-lg border border-white/20"
+                className="fixed top-4 right-4 z-40 p-3 bg-blue-600/80 backdrop-blur-md rounded-full text-white shadow-lg border border-white/20"
               >
                 <span className="font-bold text-xs">HISTORY</span>
               </button>
