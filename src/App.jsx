@@ -40,9 +40,9 @@ function App() {
             <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-4 pb-40">
               <header className="w-full text-center animate-in fade-in slide-in-from-top-4 duration-1000 mb-8 mt-8">
                 <h1 className="text-4xl md:text-6xl font-black text-white tracking-wider drop-shadow-2xl font-display">
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600">BINGO</span> REUNION
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600">BINGO</span>
                 </h1>
-                <p className="text-white/40 text-xs md:text-sm tracking-[0.8em] mt-4 uppercase font-bold">Coming of Age Ceremony 2025</p>
+                <p className="text-white/40 text-xs md:text-sm tracking-[0.8em] mt-4 uppercase font-bold">Coming of Age Ceremony 2026</p>
               </header>
 
               <div className="scale-75 md:scale-100 transition-transform duration-500">

@@ -7,11 +7,14 @@ const HistoryPanel = ({ history, reachNumbers }) => {
                     {reachNumbers.length === 0 ? (
                         <span className="text-gray-400 text-sm">No reach yet</span>
                     ) : (
-                        reachNumbers.map((num, i) => (
-                            <span key={i} className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-red-500 text-white text-xl font-black shadow-lg animate-pulse border-2 border-white/50">
-                                {num}
-                            </span>
-                        ))
+                        reachNumbers.map((num, i) => {
+                            const isHit = history.includes(num);
+                            return (
+                                <span key={i} className={`inline-flex items-center justify-center w-12 h-12 rounded-full text-xl font-black shadow-lg border-2 transition-all duration-500 ${isHit ? 'bg-yellow-400 text-black border-yellow-200 scale-90' : 'bg-red-500 text-white animate-pulse border-white/50'}`}>
+                                    {num}
+                                </span>
+                            );
+                        })
                     )}
                 </div>
             </div>
