@@ -82,6 +82,8 @@ function App() {
               placeholder="Enter number (1-75)"
               className="w-full px-4 py-3 rounded-xl bg-gray-800 text-white font-bold text-xl focus:outline-none focus:ring-4 focus:ring-yellow-500 mb-4"
               autoFocus
+              inputMode="numeric"
+              pattern="[0-9]*"
             />
             <div className="flex gap-3">
               <button
