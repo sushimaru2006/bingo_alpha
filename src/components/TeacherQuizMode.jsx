@@ -151,12 +151,6 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
                 {/* Header */}
                 <h1 className="text-4xl md:text-6xl font-display drop-shadow-lg text-center tracking-wider mb-4 relative z-20" style={{ textShadow: '4px 4px 0px rgba(0,0,0,0.2)' }}>
                     TEACHER ROULETTE
-                    <button
-                        onClick={() => setIsSettingsOpen(true)}
-                        className="absolute -right-16 top-1/2 -translate-y-1/2 p-2 text-white/30 hover:text-white transition-colors"
-                    >
-                        <Settings size={28} />
-                    </button>
                 </h1>
 
                 {/* Main Content Area */}
@@ -317,6 +311,13 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
 
             <button onClick={onBack} className="absolute top-8 left-8 flex items-center gap-2 px-8 py-4 bg-black/20 hover:bg-black/40 rounded-lg text-xl font-bold transition-all backdrop-blur-md z-50 border border-white/20">
                 <ArrowLeft size={24} /> Back
+            </button>
+
+            <button
+                onClick={() => setIsSettingsOpen(true)}
+                className="absolute top-8 right-8 p-4 bg-black/20 hover:bg-black/40 rounded-lg text-white/50 hover:text-white transition-all backdrop-blur-md z-50 border border-white/20"
+            >
+                <Settings size={28} />
             </button>
         </div>
     );
