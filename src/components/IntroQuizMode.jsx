@@ -1,11 +1,17 @@
-import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn } from 'lucide-react';
+import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn, RefreshCw } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { searchSpotify, playSpotifyTrack } from '../utils/spotify';
 import { useSpotify } from '../contexts/SpotifyContext';
 
 const IntroQuizMode = ({ onBack, onRegister }) => {
     // Consume Global Context
-    const { token, player, deviceId, isActive, login } = useSpotify();
+    const spotifyContext = useSpotify();
+
+    if (!spotifyContext) {
+        return <div className="text-white p-10">Error: SpotifyContext is null. Please refresh.</div>;
+    }
+
+    const { token, player, deviceId, isActive, login } = spotifyContext;
 
     // Local UI State
     const [number, setNumber] = useState('');
@@ -16,10 +22,17 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     const [selectedTrack, setSelectedTrack] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
 
-    // Sync local playing state with global player state if needed, 
-    // but better to trust the player events. 
-    // Since player events are in Context (paused state), we could use that.
-    // But for now, we'll keep local toggle logic which updates the player.
+    // Play History
+    const [playedHistory, setPlayedHistory] = useState(() => {
+        try {
+            const saved = localStorage.getItem("intro_quiz_history");
+            const parsed = saved ? JSON.parse(saved) : [];
+            return Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            console.error("Failed to parse history", e);
+            return [];
+        }
+    });
 
     // Effect: Handle Volume for Intro Quiz Mode
     useEffect(() => {
@@ -34,9 +47,6 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         };
     }, [player]);
 
-    // Effect: Update local isPlaying when player state changes (optional/if needed)
-    // For now, togglePlay uses generic logic.
-
     const handleSearch = async (e) => {
         e.preventDefault();
         if (!searchQuery || !token) return;
@@ -50,39 +60,43 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         }
     };
 
+    const getUniqueKey = (target) => {
+        if (target.type === 'track') return `${target.title}-${target.artist}`;
+        return `artist-${target.name}`;
+    };
+
+    // List of targets (artists or specific tracks)
+    const targets = [
+        // 合唱コン
+        { type: "track", title: "Let's serach for Tomorrow", artist: "田中安茂", start_ms: 80000 },
+        { type: "track", title: "夢を追いかけて", artist: "舘内聖美", start_ms: 0 },
+        { type: "track", title: "With You Smile", artist: "藤井宏樹", start_ms: 80500 },
+        { type: "track", title: "心の瞳", artist: "田中安茂", start_ms: 0 },
+        { type: "track", title: "時の旅人", artist: "神代混成合唱団", start_ms: 97000 },
+        { type: "track", title: "瑠璃色の地球", artist: "小金井市立緑中学校", start_ms: 189000 },
+        { type: "track", title: "旅立ちの時", artist: "どさんこんさーと", start_ms: 23000 },
+        { type: "track", title: "ヒカリ", artist: "松下", start_ms: 0 },
+        { type: "track", title: "手紙", artist: "アンジェラ・アキ", start_ms: 0 },
+    ];
+
     const handleRandomPlay = async () => {
         if (!token) return;
 
-        // List of targets (artists or specific tracks)
-        const targets = [
-            // { type: 'artist', name: "Mrs. GREEN APPLE" },
-            // { type: 'artist', name: "RADWIMPS" },
-            // { type: 'artist', name: "ONE OK ROCK" },
-            // { type: 'artist', name: "Vaundy" },
-            // { type: 'artist', name: "YOASOBI" },
-            // { type: 'artist', name: "あいみょん" },
-            // { type: 'artist', name: "Chanmina" },
-            // { type: 'artist', name: "HANA" },
-            // { type: 'artist', name: "aespa" },
-            // { type: 'artist', name: "米津　玄師" },
-            // { type: "track", title: "手紙", artist: "アンジェラ・アキ" },
-            // { type: "track", title: "革命道中-On The Way", artist: "アイナ・ジ・エンド", start_ms: 80000 },
-            // { type: "artist", name: "ORANGE RANGE" },
+        // Filter out played targets
+        const availableTargets = targets.filter(t => !playedHistory.includes(getUniqueKey(t)));
 
-            // 合唱コン
-            { type: "track", title: "Let's serach for Tomorrow", artist: "田中安茂", start_ms: 80000 },
-            { type: "track", title: "夢を追いかけて", artist: "舘内聖美", start_ms: 0 },
-            { type: "track", title: "With You Smile", artist: "藤井宏樹", start_ms: 80500 },
-            { type: "track", title: "心の瞳", artist: "田中安茂", start_ms: 0 },
-            { type: "track", title: "時の旅人", artist: "神代混成合唱団", start_ms: 97000 },
-            { type: "track", title: "瑠璃色の地球", artist: "小金井市立緑中学校", start_ms: 189000 },
-            { type: "track", title: "旅立ちの時", artist: "どさんこんさーと", start_ms: 23000 },
-            { type: "track", title: "ヒカリ", artist: "松下", start_ms: 0 },
-            { type: "track", title: "手紙", artist: "アンジェラ・アキ", start_ms: 0 },
-        ];
+        if (availableTargets.length === 0) {
+            if (window.confirm("All songs have been played! Reset history?")) {
+                setPlayedHistory([]);
+                localStorage.removeItem("intro_quiz_history");
+                return; // User can click again to play
+            }
+            return;
+        }
 
-        // Pick one random target
-        const target = targets[Math.floor(Math.random() * targets.length)];
+        // Pick one random target from available
+        const target = availableTargets[Math.floor(Math.random() * availableTargets.length)];
+        const targetKey = getUniqueKey(target);
 
         let query = searchQuery;
         if (!query) {
@@ -99,7 +113,13 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             if (tracks && tracks.length > 0) {
                 const topTrack = tracks[0];
                 const startMs = target.start_ms || 0;
-                handlePlay(topTrack, startMs);
+
+                await handlePlay(topTrack, startMs);
+
+                // Add to history ONLY if play started successfully
+                const newHistory = [...playedHistory, targetKey];
+                setPlayedHistory(newHistory);
+                localStorage.setItem("intro_quiz_history", JSON.stringify(newHistory));
 
             } else {
                 alert(`No tracks found for ${query}.`);
@@ -124,6 +144,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
             setIsPlaying(true);
         } catch (e) {
             alert("Playback failed: " + e.message);
+            throw e; // Propagate error to prevent history update
         }
     };
 
@@ -131,6 +152,13 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         if (player) {
             player.togglePlay();
             setIsPlaying(!isPlaying); // Optimistic UI update
+        }
+    };
+
+    const handleResetHistory = () => {
+        if (window.confirm("Reset played song history?")) {
+            setPlayedHistory([]);
+            localStorage.removeItem("intro_quiz_history");
         }
     };
 
@@ -188,6 +216,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
 
                     {/* Left: Search & Player */}
                     <div className="flex flex-col gap-6 bg-black/20 p-6 rounded-3xl backdrop-blur-md">
+                        {/* 
                         <form onSubmit={handleSearch} className="flex gap-2">
                             <input
                                 type="text"
@@ -200,28 +229,21 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                 <Search size={24} />
                             </button>
                         </form>
+                        */}
 
                         <button
                             onClick={handleRandomPlay}
                             className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-105"
                         >
-                            <Music size={20} /> Random Play
+                            <Music size={20} /> Random Play ({targets.length - playedHistory.length} left)
                         </button>
 
-                        {showResults && searchResults.length > 0 && (
-                            <div className="bg-white/10 rounded-xl p-2 max-h-60 overflow-y-auto">
-                                {searchResults.map(track => (
-                                    <div key={track.id} onClick={() => handlePlay(track)} className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-white/20 cursor-pointer">
-                                        {track.album.images[2] && <img src={track.album.images[2].url} alt="" className="w-10 h-10 rounded" />}
-                                        <div className="flex-1 min-w-0">
-                                            <p className="font-bold truncate">{track.name}</p>
-                                            <p className="text-xs opacity-80 truncate">{track.artists.map(a => a.name).join(", ")}</p>
-                                        </div>
-                                        <Play size={16} />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        <div className="flex justify-end">
+                            <button onClick={handleResetHistory} className="text-xs text-white/50 hover:text-white flex items-center gap-1">
+                                <RefreshCw size={12} /> Reset History
+                            </button>
+                        </div>
+
 
                         {/* Player Controls */}
                         <div className="flex flex-col items-center gap-4 mt-4 p-4 bg-black/40 rounded-2xl border border-white/10">
