@@ -171,19 +171,12 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
                             ${gameState === 'SELECTED' ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)]' : 'border-white/20'} 
                             rounded-3xl flex flex-col items-center justify-center gap-6 p-6 transition-all duration-300
                         `}>
-                            <div className={`
-                                p-8 rounded-full shadow-xl transition-colors duration-100
-                                ${currentTeacher.color}
-                            `}>
-                                <User size={80} className="text-white" />
-                            </div>
-
-                            <div className="text-center">
-                                <p className="text-sm font-bold opacity-70 tracking-widest uppercase mb-2">TARGET TEACHER</p>
-                                <h2 className="text-4xl font-black font-display tracking-wide leading-tight">
+                            <div className="text-center flex flex-col items-center justify-center h-full">
+                                <p className="text-sm font-bold opacity-70 tracking-widest uppercase mb-4">TARGET TEACHER</p>
+                                <h2 className={`text-5xl md:text-6xl font-black font-display tracking-tight leading-tight break-words w-full px-2 drop-shadow-lg ${currentTeacher.color.replace('bg-', 'text-')}`}>
                                     {currentTeacher.name}
                                 </h2>
-                                <p className="text-xl mt-2 font-bold opacity-90">{currentTeacher.title}</p>
+                                <p className="text-2xl mt-4 font-bold opacity-90">{currentTeacher.title}</p>
                             </div>
                         </div>
 
