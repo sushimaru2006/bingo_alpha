@@ -44,8 +44,8 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         player.setVolume(0.5).catch(e => console.error("Volume set failed", e));
 
         return () => {
-            console.log("IntroQuiz Unmounted: Reduce Volume to 0.1");
-            player.setVolume(0.1).catch(e => console.error("Volume reduce failed", e));
+            console.log("IntroQuiz Unmounted: Pausing Playback");
+            player.pause().catch(e => console.error("Pause failed", e));
         };
     }, [player]);
 
