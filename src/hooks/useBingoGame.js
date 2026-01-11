@@ -1,12 +1,38 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { spinRoulette } from '../utils/gameLogic';
 
 export const useBingoGame = () => {
-    const [history, setHistory] = useState([]);
+    const [history, setHistory] = useState(() => {
+        try {
+            const saved = localStorage.getItem("bingo_history");
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
+    });
+
     const [currentDraw, setCurrentDraw] = useState(null);
     const [mode, setMode] = useState('BINGO'); // 'BINGO', 'INTRO', 'TEACHER', 'SUCCESS'
-    const [reachNumbers, setReachNumbers] = useState([]);
+
+    const [reachNumbers, setReachNumbers] = useState(() => {
+        try {
+            const saved = localStorage.getItem("bingo_reach_numbers");
+            return saved ? JSON.parse(saved) : [];
+        } catch (e) {
+            return [];
+        }
+    });
+
     const [isSpinning, setIsSpinning] = useState(false);
+
+    // Persistence Effects
+    useEffect(() => {
+        localStorage.setItem("bingo_history", JSON.stringify(history));
+    }, [history]);
+
+    useEffect(() => {
+        localStorage.setItem("bingo_reach_numbers", JSON.stringify(reachNumbers));
+    }, [reachNumbers]);
 
     const spin = useCallback(() => {
         setIsSpinning(true);
@@ -41,11 +67,17 @@ export const useBingoGame = () => {
     }, [history]);
 
     const resetGame = useCallback(() => {
-        setHistory([]);
-        setCurrentDraw(null);
-        setMode('BINGO');
-        setReachNumbers([]);
-        setIsSpinning(false);
+        if (confirm("Are you sure you want to reset the entire game? history will be lost.")) {
+            setHistory([]);
+            setCurrentDraw(null);
+            setMode('BINGO');
+            setReachNumbers([]);
+            setIsSpinning(false);
+
+            // Clear storage
+            localStorage.removeItem("bingo_history");
+            localStorage.removeItem("bingo_reach_numbers");
+        }
     }, []);
 
     return {
