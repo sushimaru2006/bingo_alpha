@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn, RefreshCw, Maximize, Minimize } from 'lucide-react';
+import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn, RefreshCw, Maximize, Minimize, ListMusic, X, Plus, Trash2, Save } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import { searchSpotify, playSpotifyTrack } from '../utils/spotify';
 import { useSpotify } from '../contexts/SpotifyContext';
@@ -22,6 +22,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     const [selectedTrack, setSelectedTrack] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isFullScreen, setIsFullScreen] = useState(false);
+    const [showTrackList, setShowTrackList] = useState(false);
     const containerRef = useRef(null);
 
     // Play History
@@ -68,7 +69,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     };
 
     // List of targets (artists or specific tracks)
-    const targets = [
+    const DEFAULT_TARGETS = [
         // 合唱コン
         { type: "track", title: "Let's search for Tomorrow", artist: "田中安茂", start_ms: 72000 },
         { type: "track", title: "夢を追いかけて", artist: "舘内聖美", start_ms: 50000 },
@@ -85,23 +86,46 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         { type: "track", title: "Wasted Nights", artist: "One Ok Rock", start_ms: 42000 },
     ];
 
-    const handleRandomPlay = async () => {
-        if (!token) return;
-
-        // Filter out played targets
-        const availableTargets = targets.filter(t => !playedHistory.includes(getUniqueKey(t)));
-
-        if (availableTargets.length === 0) {
-            if (window.confirm("All songs have been played! Reset history?")) {
-                setPlayedHistory([]);
-                localStorage.removeItem("intro_quiz_history");
-                return; // User can click again to play
-            }
-            return;
+    const [targets, setTargets] = useState(() => {
+        try {
+            const saved = localStorage.getItem("intro_quiz_targets");
+            return saved ? JSON.parse(saved) : DEFAULT_TARGETS;
+        } catch (e) {
+            return DEFAULT_TARGETS;
         }
+    });
 
-        // Pick one random target from available
-        const target = availableTargets[Math.floor(Math.random() * availableTargets.length)];
+    // New Track Input State
+    const [newTrackTitle, setNewTrackTitle] = useState('');
+    const [newTrackArtist, setNewTrackArtist] = useState('');
+    const [newTrackStart, setNewTrackStart] = useState('0');
+
+    useEffect(() => {
+        localStorage.setItem("intro_quiz_targets", JSON.stringify(targets));
+    }, [targets]);
+
+    const addTarget = () => {
+        if (!newTrackTitle || !newTrackArtist) return;
+        const newTarget = {
+            type: "track",
+            title: newTrackTitle,
+            artist: newTrackArtist,
+            start_ms: parseInt(newTrackStart) * 1000 // Convert sec to ms
+        };
+        setTargets([...targets, newTarget]);
+        setNewTrackTitle('');
+        setNewTrackArtist('');
+        setNewTrackStart('0');
+    };
+
+    const removeTarget = (index) => {
+        if (confirm("Remove this track from the list?")) {
+            const newTargets = targets.filter((_, i) => i !== index);
+            setTargets(newTargets);
+        }
+    };
+
+    const playTarget = async (target) => {
         const targetKey = getUniqueKey(target);
 
         let query = searchQuery;
@@ -124,14 +148,17 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
 
                 // Add to history
                 const newHistory = [...playedHistory, targetKey];
-                setPlayedHistory(newHistory);
-                localStorage.setItem("intro_quiz_history", JSON.stringify(newHistory));
+                // Remove duplicates just in case
+                const uniqueHistory = [...new Set(newHistory)];
+
+                setPlayedHistory(uniqueHistory);
+                localStorage.setItem("intro_quiz_history", JSON.stringify(uniqueHistory));
 
             } else {
                 alert(`No tracks found for ${query}.`);
             }
         } catch (error) {
-            console.error("Random play failed", error);
+            console.error("Play target failed", error);
             if (error.message === "Token Expired") {
                 alert("Spotify token has expired. Please log in again.");
                 localStorage.removeItem("spotify_access_token");
@@ -140,6 +167,26 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                 alert(error.message);
             }
         }
+    };
+
+    const handleRandomPlay = async () => {
+        if (!token) return;
+
+        // Filter out played targets
+        const availableTargets = targets.filter(t => !playedHistory.includes(getUniqueKey(t)));
+
+        if (availableTargets.length === 0) {
+            if (window.confirm("All songs have been played! Reset history?")) {
+                setPlayedHistory([]);
+                localStorage.removeItem("intro_quiz_history");
+                return; // User can click again to play
+            }
+            return;
+        }
+
+        // Pick one random target from available
+        const target = availableTargets[Math.floor(Math.random() * availableTargets.length)];
+        await playTarget(target);
     };
 
     const handlePlay = async (track, position_ms = 0) => {
@@ -313,11 +360,98 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                             <Music size={20} /> Random Play ({targets.length - playedHistory.length} left)
                         </button>
 
-                        <div className="flex justify-end">
-                            <button onClick={handleResetHistory} className="text-xs text-white/50 hover:text-white flex items-center gap-1">
+                        <div className="flex justify-end gap-4">
+                            <button
+                                onClick={() => setShowTrackList(true)}
+                                className="text-sm text-white/70 hover:text-white flex items-center gap-1"
+                            >
+                                <ListMusic size={16} /> Track List
+                            </button>
+                            <button onClick={handleResetHistory} className="text-sm text-white/50 hover:text-white flex items-center gap-1">
                                 <RefreshCw size={12} /> Reset History
                             </button>
                         </div>
+
+                        {/* Track List Modal */}
+                        {showTrackList && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                                <div className="bg-gray-900 w-full max-w-2xl rounded-3xl border border-white/10 shadow-2xl flex flex-col max-h-[80vh]">
+                                    <div className="p-6 border-b border-white/10 flex justify-between items-center">
+                                        <h2 className="text-2xl font-bold flex items-center gap-2">
+                                            <ListMusic className="text-[#1DB954]" /> Track List
+                                        </h2>
+                                        <button onClick={() => setShowTrackList(false)} className="p-2 hover:bg-white/10 rounded-full">
+                                            <X size={24} />
+                                        </button>
+                                    </div>
+                                    <div className="bg-black/40 p-4 rounded-xl mb-4 space-y-3 border border-white/10">
+                                        <h3 className="font-bold text-sm text-gray-400 uppercase">Add New Track</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            <input
+                                                placeholder="Title"
+                                                value={newTrackTitle}
+                                                onChange={e => setNewTrackTitle(e.target.value)}
+                                                className="bg-black/30 border border-white/20 rounded-lg px-4 py-3 text-base focus:outline-none focus:border-[#1DB954]"
+                                            />
+                                            <input
+                                                placeholder="Artist"
+                                                value={newTrackArtist}
+                                                onChange={e => setNewTrackArtist(e.target.value)}
+                                                className="bg-black/30 border border-white/20 rounded-lg px-4 py-3 text-base focus:outline-none focus:border-[#1DB954]"
+                                            />
+                                        </div>
+                                        <div className="flex gap-3">
+                                            <input
+                                                type="number"
+                                                placeholder="Start (sec)"
+                                                value={newTrackStart}
+                                                onChange={e => setNewTrackStart(e.target.value)}
+                                                className="w-28 bg-black/30 border border-white/20 rounded-lg px-4 py-3 text-base focus:outline-none focus:border-[#1DB954]"
+                                            />
+                                            <button
+                                                onClick={addTarget}
+                                                disabled={!newTrackTitle || !newTrackArtist}
+                                                className="flex-1 bg-[#1DB954] hover:bg-[#1ed760] disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold rounded-lg flex items-center justify-center gap-2 text-base transition-transform active:scale-95"
+                                            >
+                                                <Plus size={20} /> Add Track
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex-1 overflow-y-auto p-4 space-y-2">
+                                        {targets.map((target, index) => {
+                                            const key = getUniqueKey(target);
+                                            const isPlayed = playedHistory.includes(key);
+                                            return (
+                                                <div key={index} className={`w-full flex items-center gap-2 p-3 rounded-xl transition-all ${isPlayed ? 'bg-white/5' : 'bg-white/10 hover:bg-white/15'}`}>
+                                                    <button
+                                                        onClick={() => {
+                                                            playTarget(target);
+                                                            setShowTrackList(false);
+                                                        }}
+                                                        className="flex-1 text-left"
+                                                    >
+                                                        <div>
+                                                            <p className={`font-bold text-lg ${isPlayed ? 'opacity-50 line-through' : ''}`}>{target.title || target.name}</p>
+                                                            <p className="text-sm text-gray-400">{target.artist} {target.start_ms > 0 && `(Start: ${target.start_ms / 1000}s)`}</p>
+                                                        </div>
+                                                    </button>
+
+                                                    {isPlayed && <span className="text-xs bg-[#1DB954] text-black px-2 py-1 rounded-full font-bold">DONE</span>}
+
+                                                    <button
+                                                        onClick={() => removeTarget(index)}
+                                                        className="p-2 text-red-500 hover:bg-red-500/20 rounded-lg transition-colors"
+                                                    >
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
 
 
                         {/* Player Controls */}
