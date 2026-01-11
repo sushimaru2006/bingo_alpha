@@ -284,7 +284,7 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
                                                 {!isSelected && (
                                                     <button
                                                         onClick={() => removeTeacher(teacher.id)}
-                                                        className="p-2 text-red-500 hover:bg-red-500/20 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                                                        className="p-2 text-red-500 hover:bg-red-500/20 rounded-lg transition-all"
                                                     >
                                                         <Trash2 size={20} />
                                                     </button>
