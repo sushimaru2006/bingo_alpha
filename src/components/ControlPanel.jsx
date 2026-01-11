@@ -19,7 +19,7 @@ const ControlPanel = ({ onSpin, onModeChange, onAddReach, isSpinning }) => {
                 </button>
 
                 <button onClick={() => onModeChange('TEACHER')} className="flex items-center gap-2 px-5 py-3 bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-600/50 font-bold rounded-xl transition-all backdrop-blur-sm">
-                    <User size={20} /> <span className="hidden md:inline">Teacher Quiz</span>
+                    <User size={20} /> <span className="hidden md:inline">Teacher</span>
                 </button>
 
                 <button onClick={onAddReach} className="flex items-center gap-2 px-5 py-3 bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white border border-red-600/50 font-bold rounded-xl transition-all backdrop-blur-sm">
