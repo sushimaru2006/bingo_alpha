@@ -21,6 +21,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     const [isRevealed, setIsRevealed] = useState(false);
     const [selectedTrack, setSelectedTrack] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
+    const [hasStarted, setHasStarted] = useState(false);
 
     // Play History
     const [playedHistory, setPlayedHistory] = useState(() => {
@@ -68,11 +69,11 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     // List of targets (artists or specific tracks)
     const targets = [
         // 合唱コン
-        { type: "track", title: "Let's search for Tomorrow", artist: "田中安茂", start_ms: 80000 },
+        { type: "track", title: "Let's search for Tomorrow", artist: "田中安茂", start_ms: 0 },
         { type: "track", title: "夢を追いかけて", artist: "舘内聖美", start_ms: 0 },
         { type: "track", title: "With You Smile", artist: "藤井宏樹", start_ms: 80500 },
         { type: "track", title: "心の瞳", artist: "田中安茂", start_ms: 0 },
-        { type: "track", title: "時の旅人", artist: "神代混成合唱団", start_ms: 97000 },
+        { type: "track", title: "時の旅人", artist: "神代混成合唱団", start_ms: 0 },
         { type: "track", title: "瑠璃色の地球", artist: "小金井市立緑中学校", start_ms: 189000 },
         { type: "track", title: "旅立ちの時", artist: "どさんこんさーと", start_ms: 23000 },
         { type: "track", title: "ヒカリ", artist: "松下", start_ms: 0 },
@@ -114,9 +115,14 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                 const topTrack = tracks[0];
                 const startMs = target.start_ms || 0;
 
-                await handlePlay(topTrack, startMs);
+                // Set track but DO NOT play yet (Mobile Fix)
+                setSelectedTrack({ ...topTrack, startMs });
+                setIsPlaying(false);
+                setHasStarted(false);
+                setIsRevealed(false);
+                setShowResults(false);
 
-                // Add to history ONLY if play started successfully
+                // Add to history
                 const newHistory = [...playedHistory, targetKey];
                 setPlayedHistory(newHistory);
                 localStorage.setItem("intro_quiz_history", JSON.stringify(newHistory));
@@ -144,13 +150,12 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
 
         try {
             await playSpotifyTrack(token, deviceId, track.uri, position_ms);
-            setSelectedTrack(track);
-            setIsRevealed(false);
-            setShowResults(false);
+            // setSelectedTrack is already set in RandomPlay
             setIsPlaying(true);
+            setHasStarted(true);
         } catch (e) {
             alert("Playback failed: " + e.message);
-            throw e; // Propagate error to prevent history update
+            // throw e;
         }
     };
 
@@ -273,16 +278,27 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                     </div>
 
                                     <div className="flex items-center gap-6">
-                                        <button
-                                            onClick={togglePlay}
-                                            className="p-4 bg-[#1DB954] text-black rounded-full shadow-lg transition-all hover:scale-110"
-                                        >
-                                            {isPlaying ? <Pause size={32} fill="black" /> : <Play size={32} fill="black" />}
-                                        </button>
+                                        {!hasStarted ? (
+                                            <button
+                                                onClick={() => handlePlay(selectedTrack, selectedTrack.startMs)}
+                                                className="px-8 py-4 bg-red-600 text-white font-black text-2xl rounded-full shadow-xl animate-pulse hover:scale-105 transition-transform"
+                                            >
+                                                TAP TO START
+                                            </button>
+                                        ) : (
+                                            <>
+                                                <button
+                                                    onClick={togglePlay}
+                                                    className="p-4 bg-[#1DB954] text-black rounded-full shadow-lg transition-all hover:scale-110"
+                                                >
+                                                    {isPlaying ? <Pause size={32} fill="black" /> : <Play size={32} fill="black" />}
+                                                </button>
 
-                                        <button onClick={() => setIsRevealed(!isRevealed)} className="p-4 bg-yellow-400 text-black rounded-full hover:scale-110 transition-transform shadow-lg">
-                                            {isRevealed ? <EyeOff size={32} /> : <Eye size={32} />}
-                                        </button>
+                                                <button onClick={() => setIsRevealed(!isRevealed)} className="p-4 bg-yellow-400 text-black rounded-full hover:scale-110 transition-transform shadow-lg">
+                                                    {isRevealed ? <EyeOff size={32} /> : <Eye size={32} />}
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                     <p className="text-xs text-white/50 mt-2">Powered by Spotify Premium</p>
                                 </>

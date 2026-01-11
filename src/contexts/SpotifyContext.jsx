@@ -59,6 +59,22 @@ export const SpotifyProvider = ({ children }) => {
                         console.log('Device ID has gone offline', device_id);
                     });
 
+                    newPlayer.addListener('initialization_error', ({ message }) => {
+                        console.error('Failed to initialize', message);
+                    });
+
+                    newPlayer.addListener('authentication_error', ({ message }) => {
+                        console.error('Failed to authenticate', message);
+                    });
+
+                    newPlayer.addListener('account_error', ({ message }) => {
+                        console.error('Failed to validate Spotify account', message);
+                    });
+
+                    newPlayer.addListener('playback_error', ({ message }) => {
+                        console.error('Failed to perform playback', message);
+                    });
+
                     newPlayer.addListener('player_state_changed', (state) => {
                         if (!state) return;
                         setIsPaused(state.paused);
