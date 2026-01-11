@@ -1,7 +1,7 @@
 
 // Access Token & Config
 const CLIENT_ID = "bb3c0fe8133744a0a514a3d27cc469fa";
-const REDIRECT_URI = "http://127.0.0.1:5173/intro";
+const REDIRECT_URI = "https://bingo-alpha-snowy.vercel.app/intro";
 const SCOPES = [
     "streaming",
     "user-read-email",
