@@ -139,7 +139,7 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center h-screen w-full bg-[#0a0a0a] text-white relative overflow-hidden font-sans">
+        <div className="flex flex-col items-center justify-center min-h-screen w-full bg-[#0a0a0a] text-white relative overflow-y-auto font-sans">
             {/* Animated Background */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,_rgba(76,29,149,0.2),_rgba(0,0,0,0))] animate-pulse duration-[5000ms]"></div>
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/40 rounded-full blur-3xl animate-float-1 mix-blend-screen"></div>
