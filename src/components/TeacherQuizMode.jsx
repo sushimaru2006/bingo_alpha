@@ -146,7 +146,7 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-blue-500/40 rounded-full blur-3xl animate-float-2 mix-blend-screen"></div>
             <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/black-scales.png')] opacity-20"></div>
 
-            <div className="z-10 flex flex-col items-center gap-8 w-full max-w-4xl">
+            <div className="z-10 flex flex-col items-center gap-8 w-full max-w-4xl pt-24 md:pt-0">
 
                 {/* Header */}
                 <h1 className="text-4xl md:text-6xl font-display drop-shadow-lg text-center tracking-wider mb-4 relative z-20" style={{ textShadow: '4px 4px 0px rgba(0,0,0,0.2)' }}>
@@ -226,7 +226,6 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
                                     onChange={(e) => setNumber(e.target.value)}
                                     placeholder="#"
                                     className="w-40 h-40 text-8xl font-black text-center text-black bg-white rounded-3xl border-8 border-white/50 focus:outline-none focus:border-yellow-400 shadow-2xl font-display"
-                                    autoFocus
                                 />
                                 <button type="submit" className="w-full py-4 bg-yellow-500 text-black text-2xl font-black rounded-xl hover:bg-yellow-400 transition-all flex items-center justify-center gap-3 shadow-xl transform hover:scale-105 active:scale-95">
                                     <Check size={32} /> CONFIRM
