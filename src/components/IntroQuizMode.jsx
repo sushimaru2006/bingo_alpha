@@ -1,106 +1,154 @@
-import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import { searchDeezer } from '../utils/deezer';
+import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { redirectToAuthCodeFlow, getAccessToken, searchSpotify, playSpotifyTrack } from '../utils/spotify';
 
 const IntroQuizMode = ({ onBack, onRegister }) => {
+    const [token, setToken] = useState(null);
+    const [deviceId, setDeviceId] = useState(null);
+    const [player, setPlayer] = useState(null);
+
     const [number, setNumber] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState([]);
     const [showResults, setShowResults] = useState(false);
     const [isRevealed, setIsRevealed] = useState(false);
     const [selectedTrack, setSelectedTrack] = useState(null);
-
-    const [audio, setAudio] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false);
 
+    // Initial Auth Check & SDK Load
+    const effectRan = useRef(false);
+
+    // Initial Auth Check & SDK Load
     useEffect(() => {
-        return () => {
-            if (audio) {
-                audio.pause();
-                audio.src = "";
+        if (effectRan.current) return;
+
+        const checkAuth = async () => {
+            const params = new URLSearchParams(window.location.search);
+            const code = params.get("code");
+
+            // Mark effect as ran if we are processing auth
+            if (code) effectRan.current = true;
+
+            let _token = token;
+
+            if (code) {
+                // Convert code to token
+                try {
+                    _token = await getAccessToken(code);
+                    setToken(_token);
+                    // Clean URL
+                    window.history.replaceState({}, null, "/intro");
+                } catch (e) {
+                    console.error("Token exchange failed", e);
+                }
+            }
+
+            if (_token) {
+                // Load Spotify Web Playback SDK
+                const script = document.createElement("script");
+                script.src = "https://sdk.scdn.co/spotify-player.js";
+                script.async = true;
+                document.body.appendChild(script);
+
+                window.onSpotifyWebPlaybackSDKReady = () => {
+                    const newPlayer = new window.Spotify.Player({
+                        name: 'Bingo Quiz Player',
+                        getOAuthToken: cb => { cb(_token); },
+                        volume: 0.5
+                    });
+
+                    newPlayer.addListener('ready', ({ device_id }) => {
+                        console.log('Ready with Device ID', device_id);
+                        setDeviceId(device_id);
+                    });
+
+                    newPlayer.addListener('not_ready', ({ device_id }) => {
+                        console.log('Device ID has gone offline', device_id);
+                    });
+
+                    newPlayer.addListener('player_state_changed', (state) => {
+                        if (!state) return;
+                        setIsPlaying(!state.paused);
+                    });
+
+                    newPlayer.connect();
+                    setPlayer(newPlayer);
+                };
             }
         };
-    }, [audio]);
+
+        checkAuth();
+    }, []);
+
+    const handleLogin = () => {
+        redirectToAuthCodeFlow();
+    };
 
     const handleSearch = async (e) => {
         e.preventDefault();
-        if (!searchQuery) return;
+        if (!searchQuery || !token) return;
         try {
-            const tracks = await searchDeezer(searchQuery);
+            const tracks = await searchSpotify(searchQuery, token);
             setSearchResults(tracks);
             setShowResults(true);
         } catch (error) {
-            console.error("Deezer search failed", error);
-            alert("Search failed. Please try again.");
+            console.error("Spotify search failed", error);
+            alert("Search failed. Token may be expired. Please re-login.");
+            setToken(null);
         }
     };
 
     const handleRandomPlay = async () => {
-        // List of artists to rotate through
-        const artists = [
-            "Mrs. GREEN APPLE",
-            "RADWIMPS",
-            "ONE OK ROCK",
-            "Vaundy",
-            "YOASOBI",
-            "Aimyon",
-            "Chanmina",
-            "BTS",
-            "HANA",
-            "aespa"
+        if (!token) return;
+
+        // List of targets (artists or specific tracks)
+        const targets = [
+            // { type: 'artist', name: "Mrs. GREEN APPLE" },
+            // { type: 'artist', name: "RADWIMPS" },
+            // { type: 'artist', name: "ONE OK ROCK" },
+            // { type: 'artist', name: "Vaundy" },
+            // { type: 'artist', name: "YOASOBI" },
+            // { type: 'artist', name: "あいみょん" },
+            // { type: 'artist', name: "Chanmina" },
+            // { type: 'artist', name: "HANA" },
+            // { type: 'artist', name: "aespa" },
+
+            // { type: 'artist', name: "米津　玄師" },
+            // { type: "track", title: "手紙", artist: "アンジェラ・アキ" },
+            { type: "track", title: "革命道中-On The Way", artist: "アイナ・ジ・エンド", start_ms: 80000 },
+            // { type: "artist", name: "ORANGE RANGE" },
+            // { type: "track", title: "Let's Search for Tomorrow", artist: "早稲田実業学校音楽部合唱班" },
+            // { type: "track", title: "時の旅人", artist: "早稲田実業学校音楽部合唱班" },
+            // { type: "track", title: "心の瞳", artist: "坂本九" }
+
+            // 合唱コン
         ];
 
-        // Pick one random artist
-        const randomArtist = artists[Math.floor(Math.random() * artists.length)];
-        const query = searchQuery || `artist:"${randomArtist}"`;
+        // Pick one random target
+        const target = targets[Math.floor(Math.random() * targets.length)];
+
+        let query = searchQuery;
+        if (!query) {
+            if (target.type === 'artist') {
+                // Use normal search query 
+                query = `"${target.name}"`;
+            } else if (target.type === 'track') {
+                // Relaxed track search
+                query = `"${target.title}" "${target.artist}"`;
+            }
+        }
 
         try {
-            // Fetch top tracks (RANKING order) strictly from the top (offset 0)
-            let tracks = await searchDeezer(query, 100, 0, 'RANKING');
-
-            // Retry logic: If no tracks found, try offset 0 (redundant here but safe)
-            if (!tracks || tracks.length === 0) {
-                console.log("No tracks found, retrying...");
-                tracks = await searchDeezer(query, 100, 0);
-            }
+            let tracks = await searchSpotify(query, token);
 
             if (tracks && tracks.length > 0) {
-                // Filter for tracks with previews AND strictly match the artist name
-                const playableTracks = tracks.filter(t => {
-                    if (!t.preview) return false;
+                // Spotify logic: trusting Spotify's ranking.
+                const topTrack = tracks[0];
 
-                    // If we are in random mode (no manual search query), strictly filter by artist
-                    if (!searchQuery) {
-                        return t.artist.name.toLowerCase().includes(randomArtist.toLowerCase());
-                    }
-                    return true;
-                });
+                // Check if the random target has a specific start time
+                const startMs = target.start_ms || 0;
+                handlePlay(topTrack, startMs);
 
-                if (playableTracks.length > 0) {
-                    // Take the top 3 tracks
-                    const top3 = playableTracks.slice(0, 3);
-
-                    // Filter out currently playing track to ensure change
-                    // If selectedTrack exists, remove it from candidates
-                    const candidates = selectedTrack
-                        ? top3.filter(t => t.id !== selectedTrack.id)
-                        : top3;
-
-                    // Fallback to top3 if candidates is empty (e.g. only 1 track total)
-                    const pool = candidates.length > 0 ? candidates : top3;
-
-                    // Pick one randomly from the pool
-                    const randomTrack = pool[Math.floor(Math.random() * pool.length)];
-
-                    // Update the search results to show these top 3
-                    setSearchResults(top3);
-                    setShowResults(true);
-
-                    // Play the selected track
-                    handlePlay(randomTrack);
-                } else {
-                    alert(`No playable tracks found for ${query}.`);
-                }
             } else {
                 alert(`No tracks found for ${query}.`);
             }
@@ -110,37 +158,25 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         }
     };
 
-    const handlePlay = (track) => {
-        if (audio) {
-            audio.pause();
-            setIsPlaying(false);
+    const handlePlay = async (track, position_ms = 0) => {
+        if (!deviceId) {
+            alert("Player not ready yet. Please wait a moment.");
+            return;
         }
 
-        if (track.preview) {
-            const newAudio = new Audio(track.preview);
-            newAudio.volume = 0.5;
-            newAudio.onended = () => setIsPlaying(false);
-            newAudio.play().catch(e => alert("Playback failed: " + e.message));
-
-            setAudio(newAudio);
-            setIsPlaying(true);
+        try {
+            await playSpotifyTrack(token, deviceId, track.uri, position_ms);
             setSelectedTrack(track);
             setIsRevealed(false);
             setShowResults(false);
-        } else {
-            alert("No preview available for this track.");
+        } catch (e) {
+            alert("Playback failed: " + e.message);
         }
     };
 
     const togglePlay = () => {
-        if (audio) {
-            if (isPlaying) {
-                audio.pause();
-                setIsPlaying(false);
-            } else {
-                audio.play();
-                setIsPlaying(true);
-            }
+        if (player) {
+            player.togglePlay();
         }
     };
 
@@ -153,11 +189,35 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         }
     };
 
+    if (!token) {
+        return (
+            <div className="flex flex-col items-center justify-center h-screen w-full bg-[#191414] text-white">
+                <div className="flex flex-col items-center gap-6 p-8 bg-black/40 rounded-3xl backdrop-blur-md border border-white/10">
+                    <Music size={64} className="text-[#1DB954]" />
+                    <h1 className="text-3xl font-bold">Spotify Login Required</h1>
+                    <p className="text-gray-400">Please login with a Premium account to use this feature.</p>
+                    <button
+                        onClick={handleLogin}
+                        className="flex items-center gap-3 px-8 py-4 bg-[#1DB954] hover:bg-[#1ed760] text-black font-bold rounded-full text-xl transition-all hover:scale-105"
+                    >
+                        <LogIn size={24} />
+                        Login with Spotify
+                    </button>
+                    <button onClick={onBack} className="text-sm text-gray-500 hover:text-white underline">
+                        Back to Menu
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="flex flex-col items-center h-screen w-full bg-[#1DB954] text-white relative overflow-hidden p-4">
             {/* Background Animation */}
-            <div className="absolute inset-0 opacity-10 pointer-events-none">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] border-4 border-white rounded-full animate-ping [animation-duration:3s]"></div>
+            <div className="absolute inset-0 opacity-20 pointer-events-none overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border-[12px] border-white rounded-full animate-ping [animation-duration:3s]"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border-[12px] border-white rounded-full animate-ping [animation-duration:3s] [animation-delay:1s]"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border-[12px] border-white rounded-full animate-ping [animation-duration:3s] [animation-delay:2s]"></div>
             </div>
 
             <div className="z-10 w-full max-w-6xl flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500 h-full overflow-y-auto custom-scrollbar">
@@ -165,7 +225,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                 {/* Header */}
                 <div className="flex items-center gap-4 mt-8">
                     <div className="p-4 bg-black/20 rounded-full backdrop-blur-lg">
-                        <Music size={40} />
+                        <Music size={40} className="text-white" />
                     </div>
                     <h1 className="text-4xl md:text-6xl font-black font-display drop-shadow-lg">INTRO QUIZ</h1>
                 </div>
@@ -179,7 +239,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search song (Deezer)..."
+                                placeholder="Search song (Spotify)..."
                                 className="flex-1 px-4 py-3 rounded-xl text-black font-bold focus:outline-none"
                             />
                             <button type="submit" className="p-3 bg-black rounded-xl hover:bg-gray-800 transition-colors">
@@ -191,17 +251,17 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                             onClick={handleRandomPlay}
                             className="w-full py-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl font-bold flex items-center justify-center gap-2 shadow-lg transition-all hover:scale-105"
                         >
-                            <Music size={20} /> Random Play (from Search or Pop)
+                            <Music size={20} /> Random Play (Top 1)
                         </button>
 
                         {showResults && searchResults.length > 0 && (
                             <div className="bg-white/10 rounded-xl p-2 max-h-60 overflow-y-auto">
                                 {searchResults.map(track => (
                                     <div key={track.id} onClick={() => handlePlay(track)} className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-white/20 cursor-pointer">
-                                        <img src={track.album.cover_small} alt="" className="w-10 h-10 rounded" />
+                                        {track.album.images[2] && <img src={track.album.images[2].url} alt="" className="w-10 h-10 rounded" />}
                                         <div className="flex-1 min-w-0">
-                                            <p className="font-bold truncate">{track.title}</p>
-                                            <p className="text-xs opacity-80 truncate">{track.artist.name}</p>
+                                            <p className="font-bold truncate">{track.name}</p>
+                                            <p className="text-xs opacity-80 truncate">{track.artists.map(a => a.name).join(", ")}</p>
                                         </div>
                                         <Play size={16} />
                                     </div>
@@ -214,14 +274,16 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                             {selectedTrack ? (
                                 <>
                                     <div className={`relative w-48 h-48 bg-gray-800 rounded-xl overflow-hidden shadow-2xl transition-all duration-500 ${isRevealed ? 'blur-0' : 'blur-md'}`}>
-                                        <img src={selectedTrack.album.cover_medium} alt="Album Art" className="w-full h-full object-cover" />
+                                        {selectedTrack.album.images[1] && (
+                                            <img src={selectedTrack.album.images[1].url} alt="Album Art" className="w-full h-full object-cover" />
+                                        )}
                                     </div>
 
                                     <div className="text-center h-16 flex flex-col justify-center w-full px-4">
                                         {isRevealed ? (
                                             <>
-                                                <p className="text-xl font-bold truncate w-full">{selectedTrack.title}</p>
-                                                <p className="opacity-80 truncate w-full">{selectedTrack.artist.name}</p>
+                                                <p className="text-xl font-bold truncate w-full">{selectedTrack.name}</p>
+                                                <p className="opacity-80 truncate w-full">{selectedTrack.artists.map(a => a.name).join(", ")}</p>
                                             </>
                                         ) : (
                                             <p className="text-xl font-bold italic opacity-50">???</p>
@@ -231,7 +293,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                     <div className="flex items-center gap-6">
                                         <button
                                             onClick={togglePlay}
-                                            className="p-4 bg-white text-black rounded-full shadow-lg transition-all hover:scale-110"
+                                            className="p-4 bg-[#1DB954] text-black rounded-full shadow-lg transition-all hover:scale-110"
                                         >
                                             {isPlaying ? <Pause size={32} fill="black" /> : <Play size={32} fill="black" />}
                                         </button>
@@ -240,11 +302,11 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                             {isRevealed ? <EyeOff size={32} /> : <Eye size={32} />}
                                         </button>
                                     </div>
-                                    <p className="text-xs text-white/50 mt-2">Powered by Deezer</p>
+                                    <p className="text-xs text-white/50 mt-2">Powered by Spotify Premium</p>
                                 </>
                             ) : (
                                 <div className="h-64 flex items-center justify-center opacity-50">
-                                    <p>Select a track to play</p>
+                                    <p>{deviceId ? "Ready to play" : "Connecting to Spotify..."}</p>
                                 </div>
                             )}
                         </div>
@@ -261,7 +323,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
                                 value={number}
                                 onChange={(e) => setNumber(e.target.value)}
                                 placeholder="#"
-                                className="w-40 h-40 text-8xl font-black text-center text-black rounded-3xl border-8 border-white focus:outline-none focus:ring-8 focus:ring-black/20 shadow-xl"
+                                className="w-40 h-40 text-8xl font-black text-center text-black rounded-3xl border-8 border-white focus:outline-none focus:ring-8 focus:ring-[#1DB954]/50 shadow-xl"
                             />
                             <button type="submit" className="w-full py-4 bg-black text-white text-2xl font-bold rounded-2xl hover:bg-gray-900 transition-all flex items-center justify-center gap-3 shadow-xl transform hover:scale-105 active:scale-95">
                                 <Check size={32} /> OPEN NUMBER
