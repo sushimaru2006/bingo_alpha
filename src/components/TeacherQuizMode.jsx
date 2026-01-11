@@ -5,7 +5,7 @@ import { useState, useRef, useEffect } from 'react';
 // You can add images by adding an 'image' property with a URL
 // Default data for reset
 const DEFAULT_TEACHERS = [
-    { id: 1, name: "Principal", color: "bg-red-500", title: "校長先生" },
+    { id: 1, name: "Principal", color: "bg-pink-500", title: "校長先生" },
     { id: 2, name: "Vice Principal", color: "bg-blue-500", title: "副校長先生" },
     { id: 3, name: "Grade Chief", color: "bg-green-500", title: "学年主任" },
     { id: 4, name: "Math Teacher", color: "bg-yellow-500", title: "数学科" },
@@ -60,7 +60,7 @@ const TeacherQuizMode = ({ onBack, onRegister }) => {
             id: Date.now(),
             name: newTeacherName,
             title: newTeacherTitle,
-            color: ["bg-red-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-orange-500", "bg-cyan-500"][Math.floor(Math.random() * 7)]
+            color: ["bg-pink-500", "bg-blue-500", "bg-green-500", "bg-yellow-500", "bg-purple-500", "bg-orange-500", "bg-cyan-500"][Math.floor(Math.random() * 7)]
         };
         setTeachers([...teachers, newTeacher]);
         setNewTeacherName('');
