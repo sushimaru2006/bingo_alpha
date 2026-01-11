@@ -166,6 +166,7 @@ function App() {
               onModeChange={handleModeChange}
               onAddReach={() => setShowReachModal(true)}
               isSpinning={game.isSpinning}
+              onReset={game.resetGame}
             />
           </div>
         } />

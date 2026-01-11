@@ -1,6 +1,6 @@
-import { Play, Music, User, Trophy, Plus } from 'lucide-react';
+import { Play, Music, User, Trophy, Plus, RotateCcw } from 'lucide-react';
 
-const ControlPanel = ({ onSpin, onModeChange, onAddReach, isSpinning }) => {
+const ControlPanel = ({ onSpin, onModeChange, onAddReach, isSpinning, onReset }) => {
     return (
         <div className="flex flex-wrap landscape:flex-col justify-center items-center gap-4 p-6 landscape:p-4 bg-black/80 backdrop-blur-xl rounded-t-3xl landscape:rounded-t-none landscape:rounded-l-3xl border-t landscape:border-t-0 landscape:border-l border-white/10 w-full landscape:w-auto fixed bottom-0 left-0 landscape:left-auto landscape:right-0 landscape:top-0 landscape:bottom-0 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.5)] h-auto landscape:h-full overflow-y-auto">
             <button
@@ -28,6 +28,10 @@ const ControlPanel = ({ onSpin, onModeChange, onAddReach, isSpinning }) => {
 
                 <button onClick={() => onModeChange('SUCCESS')} className="flex items-center gap-2 px-5 py-3 bg-purple-600/20 hover:bg-purple-600 text-purple-400 hover:text-white border border-purple-600/50 font-bold rounded-xl transition-all backdrop-blur-sm landscape:justify-center">
                     <Trophy size={20} /> <span className="hidden md:inline landscape:hidden xl:inline">Bingo!</span>
+                </button>
+
+                <button onClick={onReset} className="flex items-center gap-2 px-5 py-3 bg-gray-600/20 hover:bg-red-600/80 text-gray-400 hover:text-white border border-gray-600/50 font-bold rounded-xl transition-all backdrop-blur-sm landscape:justify-center">
+                    <RotateCcw size={20} /> <span className="hidden md:inline landscape:hidden xl:inline">Reset</span>
                 </button>
             </div>
         </div>
