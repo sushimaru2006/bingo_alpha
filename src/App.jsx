@@ -107,32 +107,32 @@ function App() {
       )}
       <Routes>
         <Route path="/" element={
-          <div className="flex min-h-screen flex-col md:flex-row landscape:flex-row relative">
+          <div className="flex h-screen overflow-hidden flex-col md:flex-row landscape:flex-row relative">
             {/* Background Texture */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-800/20 via-black to-black pointer-events-none fixed"></div>
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-4 pb-40 landscape:pb-4 landscape:pr-32">
-              <header className="w-full text-center animate-in fade-in slide-in-from-top-4 duration-1000 mb-8 mt-8">
+            <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-4 pb-40 landscape:pb-4 landscape:pr-32 overflow-y-auto custom-scrollbar">
+              <header className="w-full text-center animate-in fade-in slide-in-from-top-4 duration-1000 mb-8 mt-8 shrink-0">
                 <h1 className="text-4xl md:text-6xl font-black text-white tracking-wider drop-shadow-2xl font-display">
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600">BINGO</span>
                 </h1>
                 <p className="text-white/40 text-xs md:text-sm tracking-[0.8em] mt-4 uppercase font-bold">Coming of Age Ceremony 2026</p>
               </header>
 
-              <div className="scale-75 md:scale-100 transition-transform duration-500">
+              <div className="scale-75 md:scale-100 transition-transform duration-500 shrink-0">
                 <Roulette currentDraw={game.currentDraw} isSpinning={game.isSpinning} />
               </div>
 
               {/* Message Area */}
-              <div className="h-16 mt-8 flex items-center justify-center">
+              <div className="h-16 mt-8 flex items-center justify-center shrink-0">
                 {game.currentDraw?.type === 'MUSIC' && <p className="text-2xl font-bold text-green-400 animate-pulse">🎵 Music Event! Intro Quiz!</p>}
                 {game.currentDraw?.type === 'TEACHER' && <p className="text-2xl font-bold text-blue-400 animate-pulse">👨‍🏫 Teacher Event! Quiz Time!</p>}
               </div>
             </div>
 
             {/* Sidebar (History) - Desktop */}
-            <div className="hidden md:block w-80 lg:w-96 h-full p-6 z-20 animate-in fade-in slide-in-from-right-10 duration-1000">
+            <div className="hidden md:block w-80 lg:w-96 h-full p-6 z-20 animate-in fade-in slide-in-from-right-10 duration-1000 overflow-hidden">
               <HistoryPanel history={game.history} reachNumbers={game.reachNumbers} />
             </div>
 
