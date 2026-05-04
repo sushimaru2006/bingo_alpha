@@ -8,6 +8,7 @@ import ControlPanel from './components/ControlPanel';
 import IntroQuizMode from './components/IntroQuizMode';
 import TeacherQuizMode from './components/TeacherQuizMode';
 import BingoSuccess from './components/BingoSuccess';
+import AdSlot from './components/AdSlot';
 
 function App() {
   const game = useBingoGame();
@@ -35,6 +36,9 @@ function App() {
   };
 
   const toggleFullScreen = () => {
+    // Capacitor ネイティブ環境では fullscreen API は使用不可
+    if (window.Capacitor) return;
+
     if (!document.fullscreenElement) {
       appRef.current.requestFullscreen().catch(err => {
         console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
@@ -47,6 +51,7 @@ function App() {
   };
 
   useEffect(() => {
+    if (window.Capacitor) return;
     const handleChange = () => {
       setIsFullScreen(!!document.fullscreenElement);
     };
@@ -63,7 +68,7 @@ function App() {
   };
 
   return (
-    <div ref={appRef} className="min-h-screen bg-[#111] font-sans text-white selection:bg-yellow-500 selection:text-black relative">
+    <div ref={appRef} className="min-h-screen bg-[#111] font-sans text-white selection:bg-yellow-500 selection:text-black relative pt-safe">
       {/* Global Full Screen Toggle */}
 
 
@@ -113,6 +118,7 @@ function App() {
 
             {/* Main Content */}
             <div className="flex-1 flex flex-col items-center justify-center relative z-10 p-4 pb-40 landscape:pb-4 landscape:pr-32 overflow-y-auto custom-scrollbar">
+              <AdSlot position="top" />
               <header className="w-full text-center animate-in fade-in slide-in-from-top-4 duration-1000 mb-8 mt-8 shrink-0">
                 <h1 className="text-4xl md:text-6xl font-black text-white tracking-wider drop-shadow-2xl font-display">
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600">BINGO</span>
@@ -120,7 +126,7 @@ function App() {
                 <p className="text-white/40 text-xs md:text-sm tracking-[0.8em] mt-4 uppercase font-bold">Coming of Age Ceremony 2026</p>
               </header>
 
-              <div className="scale-75 md:scale-100 transition-transform duration-500 shrink-0">
+              <div className="scale-[80%] sm:scale-90 md:scale-100 transition-transform duration-500 shrink-0">
                 <Roulette currentDraw={game.currentDraw} isSpinning={game.isSpinning} />
               </div>
 
@@ -140,7 +146,7 @@ function App() {
             <div className="md:hidden">
               <button
                 onClick={() => setShowMobileHistory(true)}
-                className="fixed top-4 right-4 z-40 p-3 bg-blue-600/80 backdrop-blur-md rounded-full text-white shadow-lg border border-white/20"
+                className="fixed top-[calc(env(safe-area-inset-top)+1rem)] right-4 z-40 px-4 py-3 min-w-[44px] min-h-[44px] bg-blue-600/80 backdrop-blur-md rounded-full text-white shadow-lg border border-white/20 flex items-center justify-center"
               >
                 <span className="font-bold text-xs">HISTORY</span>
               </button>
@@ -148,10 +154,10 @@ function App() {
               {showMobileHistory && (
                 <div className="fixed inset-0 z-50 flex justify-end">
                   <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowMobileHistory(false)} />
-                  <div className="relative w-80 h-full bg-gray-900 border-l border-white/10 p-6 shadow-2xl animate-in slide-in-from-right duration-300">
+                  <div className="relative w-[85vw] max-w-sm h-full bg-gray-900 border-l border-white/10 p-6 pt-[calc(env(safe-area-inset-top)+1.5rem)] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] shadow-2xl animate-in slide-in-from-right duration-300">
                     <button
                       onClick={() => setShowMobileHistory(false)}
-                      className="absolute top-4 right-4 p-2 text-white/50 hover:text-white"
+                      className="absolute top-[calc(env(safe-area-inset-top)+1rem)] right-4 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center text-white/50 hover:text-white"
                     >
                       X
                     </button>
@@ -161,6 +167,9 @@ function App() {
               )}
             </div>
 
+            <div className="mb-2">
+              <AdSlot position="bottom" />
+            </div>
             <ControlPanel
               onSpin={game.spin}
               onModeChange={handleModeChange}

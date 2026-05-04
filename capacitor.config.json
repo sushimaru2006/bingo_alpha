@@ -1,0 +1,15 @@
+{
+  "appId": "com.bingoreunion.app",
+  "appName": "Bingo Reunion",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#111111"
+    },
+    "StatusBar": {
+      "style": "dark",
+      "backgroundColor": "#111111"
+    }
+  }
+}

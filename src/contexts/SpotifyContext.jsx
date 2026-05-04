@@ -1,4 +1,20 @@
 
+// ⚠️ セキュリティ・Capacitor 互換性レビューメモ (2026-05-04)
+//
+// [送信データ確認]
+// - spotify_access_token: localStorage に保存のみ。外部への不要送信なし。
+// - verifier (PKCE): localStorage に一時保存。Spotify /api/token にのみ送信され、取得後は削除されない（要改善）。
+//   改善案: getAccessToken 完了後に localStorage.removeItem("verifier") を呼ぶこと。
+//
+// [Capacitor (WKWebView) 互換性]
+// - Spotify Web Playback SDK (sdk.scdn.co/spotify-player.js) は Web ブラウザ専用 SDK。
+//   WKWebView 上での動作は非サポート。Capacitor ネイティブアプリでは SDK が機能しない可能性が高い。
+//   代替案: Spotify iOS SDK (native) の使用、または再生機能を省略して楽曲検索・メタデータ表示のみに絞る。
+//
+// [アクセストークンの保管]
+// - localStorage は iOS でストレージ圧迫時にクリアされる可能性がある。
+//   Capacitor ネイティブアプリでは @capacitor/preferences (iOS Keychain 使用) への移行を推奨。
+
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { getAccessToken, redirectToAuthCodeFlow } from '../utils/spotify';
 

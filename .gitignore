@@ -24,3 +24,9 @@ dist-ssr
 *.sw?
 
 /data
+
+# Environment variables (sensitive keys must not be committed)
+.env
+.env.local
+.env.*.local
+.env.*

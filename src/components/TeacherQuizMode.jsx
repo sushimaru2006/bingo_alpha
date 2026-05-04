@@ -1,18 +1,6 @@
 import { ArrowLeft, Check, User, GraduationCap, Play, Square, Settings, Trash2, Plus, RotateCcw, X } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
-
-// Configuration: Add detailed teacher data here
-// You can add images by adding an 'image' property with a URL
-// Default data for reset
-const DEFAULT_TEACHERS = [
-    { id: 1, name: "Principal", color: "bg-pink-500", title: "校長先生" },
-    { id: 2, name: "Vice Principal", color: "bg-blue-500", title: "副校長先生" },
-    { id: 3, name: "Grade Chief", color: "bg-green-500", title: "学年主任" },
-    { id: 4, name: "Math Teacher", color: "bg-yellow-500", title: "数学科" },
-    { id: 5, name: "English Teacher", color: "bg-purple-500", title: "英語科" },
-    { id: 6, name: "PE Teacher", color: "bg-orange-500", title: "体育科" },
-    { id: 7, name: "Science Teacher", color: "bg-cyan-500", title: "理科" },
-];
+import DEFAULT_TEACHERS from '../data/members.json';
 
 const TeacherQuizMode = ({ onBack, onRegister }) => {
     const [number, setNumber] = useState('');

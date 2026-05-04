@@ -1,9 +1,10 @@
 
 // Access Token & Config
-const CLIENT_ID = "bb3c0fe8133744a0a514a3d27cc469fa";
-const REDIRECT_URI = import.meta.env.PROD
-    ? "https://bingo-alpha-snowy.vercel.app/intro"
-    : "http://127.0.0.1:5173/intro";
+// CLIENT_ID と REDIRECT_URI は環境変数から取得する
+// .env に VITE_SPOTIFY_CLIENT_ID と VITE_REDIRECT_URI を設定すること
+// Capacitor ネイティブ環境では VITE_REDIRECT_URI を設定しない場合、カスタムURLスキームにフォールバック
+const CLIENT_ID = import.meta.env.VITE_SPOTIFY_CLIENT_ID;
+const REDIRECT_URI = import.meta.env.VITE_REDIRECT_URI || "bingoreunion://intro";
 const SCOPES = [
     "streaming",
     "user-read-email",

@@ -2,6 +2,7 @@ import { ArrowLeft, Check, Music, Search, Play, Pause, Eye, EyeOff, LogIn, Refre
 import { useState, useEffect, useRef } from 'react';
 import { searchSpotify, playSpotifyTrack } from '../utils/spotify';
 import { useSpotify } from '../contexts/SpotifyContext';
+import DEFAULT_TARGETS from '../data/songs.json';
 
 const IntroQuizMode = ({ onBack, onRegister }) => {
     // Consume Global Context
@@ -68,23 +69,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
         return `artist-${target.name}`;
     };
 
-    // List of targets (artists or specific tracks)
-    const DEFAULT_TARGETS = [
-        // 合唱コン
-        { type: "track", title: "Let's search for Tomorrow", artist: "田中安茂", start_ms: 72000 },
-        { type: "track", title: "夢を追いかけて", artist: "舘内聖美", start_ms: 50000 },
-        { type: "track", title: "With You Smile", artist: "藤井宏樹", start_ms: 72500 },
-        { type: "track", title: "心の瞳", artist: "田中安茂", start_ms: 57000 },
-        { type: "track", title: "時の旅人", artist: "神代混成合唱団", start_ms: 90000 },
-        { type: "track", title: "瑠璃色の地球", artist: "小金井市立緑中学校", start_ms: 61000 },
-        { type: "track", title: "旅立ちの時", artist: "どさんこんさーと", start_ms: 85000 },
-        { type: "track", title: "ヒカリ", artist: "松下", start_ms: 0 },
-        { type: "track", title: "手紙", artist: "合唱団轟", start_ms: 48000 },
-        // 俺選びトラック
-        { type: "track", title: "Tokimeki", artist: "Vaundy", start_ms: 0 },
-        { type: "track", title: "IRIS OUT", artist: "米津", start_ms: 0 },
-        { type: "track", title: "Wasted Nights", artist: "One Ok Rock", start_ms: 42000 },
-    ];
+    // DEFAULT_TARGETS は src/data/songs.json から import 済み
 
     const [targets, setTargets] = useState(() => {
         try {
@@ -221,6 +206,9 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
     };
 
     const toggleFullScreen = () => {
+        // Capacitor ネイティブ環境では fullscreen API は使用不可
+        if (window.Capacitor) return;
+
         if (!document.fullscreenElement) {
             containerRef.current.requestFullscreen().catch(err => {
                 console.error(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
@@ -234,6 +222,7 @@ const IntroQuizMode = ({ onBack, onRegister }) => {
 
     // Listen for Escape key or browser exit
     useEffect(() => {
+        if (window.Capacitor) return;
         const handleChange = () => {
             setIsFullScreen(!!document.fullscreenElement);
         };
